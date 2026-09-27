@@ -302,7 +302,7 @@ const server = createServer(async (req, res) => {
     }
     catch (error) { return json(res, error.statusCode || 502, { error: error.message }); }
   }
-  if (req.method === "POST" && (url.pathname === "/api/game/decide" || url.pathname === "/api/fc26/decide")) {
+  if (req.method === "POST" && url.pathname === "/api/game/decide") {
     try {
       const body = await readJson(req);
       if (typeof body.imageData !== "string" || !/^data:image\/(png|jpeg|webp);base64,/.test(body.imageData)) throw Object.assign(new Error("imageData must be a PNG, JPEG, or WebP data URL"), { statusCode: 400 });
@@ -315,7 +315,7 @@ const server = createServer(async (req, res) => {
       return json(res, error.statusCode || (error.name === "TypeError" ? 502 : 400), { error: error.message || "request_failed" });
     }
   }
-  if (req.method === "POST" && ["/api/game/obs-decide", "/api/fc26/obs-decide"].includes(url.pathname)) {
+  if (req.method === "POST" && url.pathname === "/api/game/obs-decide") {
     try {
       const body = await readJson(req);
       validateCandidates(body.candidates);

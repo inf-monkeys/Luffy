@@ -138,6 +138,4 @@ Pico 2 W 固件和刷写说明见 [`firmware/pico2w-agent`](firmware/pico2w-agen
 }
 ```
 
-老版本 `/api/fc26/*` 路由暂时保留兼容。
-
 `/api/game/decide` 和 `/api/game/obs-decide` 可以接收这些通用字段：`game`、`gameIntroduction`、`controller`、`gameplay`、`controls`、`observations`、`objective`、`stateNotes` 和 `candidates`。视觉管线固定为 OmniJev 原始视觉。
