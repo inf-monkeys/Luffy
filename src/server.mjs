@@ -132,11 +132,11 @@ async function analyzeFrame({ imageData, previousState, previousImageData }) {
   });
 }
 
-async function recommendFc26({ state, candidates }) {
-  const jevState = { game: "EA SPORTS FC 26 on Nintendo Switch", observation: state, legal_actions: candidates };
+async function recommendGameAction({ game, objective, stateNotes, state, candidates }) {
+  const jevState = { game, objective, player_context: stateNotes || "", observation: state, legal_actions: candidates };
   const questions = { action: {
     type: "choice",
-    instructions: "Given only the visible observation and legal button candidates, which single controller action is the best next short action? Choose WAIT if information is insufficient. Do not invent button combinations.",
+    instructions: "Recommend one short next action for this game using the objective, player context, coarse ASCII color map, and detected motion regions. The map is lossy and does not identify objects. If the game state or button meaning is unclear, choose the WAIT candidate. Never invent controls or claim an action was executed.",
     criteria: Object.fromEntries(candidates.map(({ id, button, description }) => [id, `${button}: ${description}`])),
   } };
   const { response, data } = await callJev("systemone", { state: jevState, model: "jev-latest", questions });
@@ -147,6 +147,7 @@ async function recommendFc26({ state, candidates }) {
   return { candidate, confidence: answer.confidence ?? null, probabilities: answer.probabilities ?? null, model: data.model ?? null };
 }
 
+let lastObsJevRequestAt = 0;
 const server = createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
   if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
@@ -160,7 +161,7 @@ const server = createServer(async (req, res) => {
     try { return json(res, 200, await captureObsScreenshot()); }
     catch (error) { return json(res, error.statusCode || 502, { error: error.message }); }
   }
-  if (req.method === "POST" && url.pathname === "/api/fc26/decide") {
+  if (req.method === "POST" && (url.pathname === "/api/game/decide" || url.pathname === "/api/fc26/decide")) {
     try {
       const body = await readJson(req);
       if (typeof body.imageData !== "string" || !/^data:image\/(png|jpeg|webp);base64,/.test(body.imageData)) throw Object.assign(new Error("imageData must be a PNG, JPEG, or WebP data URL"), { statusCode: 400 });
@@ -169,13 +170,13 @@ const server = createServer(async (req, res) => {
       if (!Number.isFinite(state.confidence) || state.confidence < Number(process.env.MIN_VISION_CONFIDENCE || 0.55)) {
         return json(res, 200, { status: "abstain", reason: "visual_state_confidence_too_low", state, suggestedAction: null });
       }
-      const recommendation = await recommendFc26({ state, candidates: body.candidates });
+      const recommendation = await recommendGameAction({ game: body.game || "Unspecified game", objective: body.objective || "Choose a safe next action", stateNotes: body.stateNotes, state, candidates: body.candidates });
       return json(res, 200, { status: "recommendation", state, suggestedAction: recommendation.candidate, confidence: recommendation.confidence, probabilities: recommendation.probabilities, model: recommendation.model, execution: "manual_only" });
     } catch (error) {
       return json(res, error.statusCode || (error.name === "TypeError" ? 502 : 400), { error: error.message || "request_failed" });
     }
   }
-  if (req.method === "POST" && url.pathname === "/api/fc26/obs-decide") {
+  if (req.method === "POST" && ["/api/game/obs-decide", "/api/fc26/obs-decide"].includes(url.pathname)) {
     try {
       const body = await readJson(req);
       validateCandidates(body.candidates);
@@ -184,7 +185,12 @@ const server = createServer(async (req, res) => {
       if (!Number.isFinite(state.confidence) || state.confidence < Number(process.env.MIN_VISION_CONFIDENCE || 0.55)) {
         return json(res, 200, { status: "abstain", reason: "visual_state_confidence_too_low", sourceName: frame.sourceName, capturedAt: frame.capturedAt, imageData: frame.imageData, state, suggestedAction: null, execution: "manual_only" });
       }
-      const recommendation = await recommendFc26({ state, candidates: body.candidates });
+      const jevInterval = Math.max(1000, Number(process.env.JEV_MIN_INTERVAL_MS || 2500));
+      if (Date.now() - lastObsJevRequestAt < jevInterval) {
+        return json(res, 200, { status: "pending", reason: "jev_request_cooldown", sourceName: frame.sourceName, capturedAt: frame.capturedAt, imageData: frame.imageData, state, suggestedAction: null, execution: "manual_only" });
+      }
+      lastObsJevRequestAt = Date.now();
+      const recommendation = await recommendGameAction({ game: body.game || "Unspecified game", objective: body.objective || "Choose a safe next action", stateNotes: body.stateNotes, state, candidates: body.candidates });
       return json(res, 200, { status: "recommendation", sourceName: frame.sourceName, capturedAt: frame.capturedAt, imageData: frame.imageData, state, suggestedAction: recommendation.candidate, confidence: recommendation.confidence, probabilities: recommendation.probabilities, model: recommendation.model, execution: "manual_only" });
     } catch (error) {
       return json(res, error.statusCode || (error.name === "TypeError" ? 502 : 400), { error: error.message || "request_failed" });
