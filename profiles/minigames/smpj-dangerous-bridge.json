@@ -1,0 +1,323 @@
+{
+  "schema_version": 1,
+  "id": "smpj-dangerous-bridge",
+  "description": "《危险桥梁》独立小游戏配置：4 人对战，使用左摇杆移动，避开滚木和脚下缺口抵达终点。",
+  "game": "超级马里奥派对 空前盛会 / 危险桥梁",
+  "introduction": "4 人对战小游戏。玩家在木桥上移动，避开滚动圆木和桥面缺口，向终点前进。",
+  "objective": "在不掉下桥的前提下沿桥前进并到达终点；只在画面明确安全时发送短时左摇杆输入。",
+  "state_notes": "小游戏说明页显示“移动”；实际操作页未显示需要按钮或体感。使用左摇杆控制方向，输入后回中观察位置。Pico 没有陀螺仪、加速度计和震动，因此不发送摇动/倾斜动作；看不清角色或障碍时选择 WAIT。",
+  "controller": {
+    "platform": "Nintendo Switch",
+    "layout": "Switch Pro Controller",
+    "button_encoding": "buttons is a simultaneous button list; left_stick and right_stick axes are normalized from -1 to 1; y=1 means up",
+    "supports_simultaneous": true,
+    "supports_sticks": true,
+    "supports_motion": false,
+    "unsupported_sensors": [
+      "gyroscope",
+      "accelerometer",
+      "rumble"
+    ]
+  },
+  "gameplay": {
+    "mode": "single_minigame",
+    "completion_signal": "finish_line_or_fall_result",
+    "active_states": [
+      "instruction",
+      "countdown",
+      "active_movement",
+      "finish_or_fall",
+      "result"
+    ],
+    "non_active_states": [
+      "loading",
+      "motion_required",
+      "unsupported_minigame",
+      "paused"
+    ]
+  },
+  "controls": {
+    "A": {
+      "type": "button",
+      "meaning": "确认、掷骰子、选择高亮项目或执行画面提示的主动作",
+      "how_to_press": "通常短按 120–250 ms；只有画面明确要求持续输入时才保持",
+      "when_to_use": "画面出现确认、掷骰子、选择、继续或主动作提示时"
+    },
+    "B": {
+      "type": "button",
+      "meaning": "取消、返回或退出当前选择",
+      "how_to_press": "通常短按；不确定时不要连续按",
+      "when_to_use": "画面明确显示返回/取消，或需要退出当前菜单时"
+    },
+    "X": {
+      "type": "button",
+      "meaning": "上下文动作或道具/辅助界面动作",
+      "how_to_press": "仅在画面明确标出 X 时短按",
+      "when_to_use": "可用道具、辅助界面或小游戏提示明确要求 X 时"
+    },
+    "Y": {
+      "type": "button",
+      "meaning": "次级上下文动作或道具/辅助界面动作",
+      "how_to_press": "仅在画面明确标出 Y 时短按",
+      "when_to_use": "小游戏或菜单明确要求 Y 时"
+    },
+    "L": {
+      "type": "button",
+      "meaning": "左肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 L 时"
+    },
+    "R": {
+      "type": "button",
+      "meaning": "右肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 R 时"
+    },
+    "ZL": {
+      "type": "button",
+      "meaning": "左扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZL 时"
+    },
+    "ZR": {
+      "type": "button",
+      "meaning": "右扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZR 时"
+    },
+    "UP": {
+      "type": "button",
+      "meaning": "十字键上，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向上移动时"
+    },
+    "DOWN": {
+      "type": "button",
+      "meaning": "十字键下，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向下移动时"
+    },
+    "LEFT": {
+      "type": "button",
+      "meaning": "十字键左，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向左移动时"
+    },
+    "RIGHT": {
+      "type": "button",
+      "meaning": "十字键右，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向右移动时"
+    },
+    "L3": {
+      "type": "button",
+      "meaning": "按下左摇杆",
+      "how_to_press": "仅在画面明确提示 L3 时短按",
+      "when_to_use": "画面明确显示 L3 时"
+    },
+    "R3": {
+      "type": "button",
+      "meaning": "按下右摇杆",
+      "how_to_press": "仅在画面明确提示 R3 时短按",
+      "when_to_use": "画面明确显示 R3 时"
+    },
+    "PLUS": {
+      "type": "system",
+      "meaning": "暂停或打开当前菜单",
+      "how_to_press": "仅在用户要求暂停或画面明确提示时短按",
+      "when_to_use": "需要暂停或查看菜单时；自动运行中默认不使用"
+    },
+    "MINUS": {
+      "type": "system",
+      "meaning": "打开地图、信息或次级菜单",
+      "how_to_press": "仅在画面明确提示时短按",
+      "when_to_use": "需要地图/信息或画面明确提示时"
+    },
+    "HOME": {
+      "type": "system",
+      "meaning": "返回 Switch 系统主页",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "离开游戏时；自动运行中禁止"
+    },
+    "CAPTURE": {
+      "type": "system",
+      "meaning": "保存 Switch 截图或视频",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "需要记录画面时"
+    },
+    "LEFT_STICK": {
+      "type": "stick",
+      "meaning": "危险桥梁中的移动方向控制",
+      "how_to_press": "x/y 使用 -1 到 1，y=1 表示向上；每次短推 150–250 ms 后回中观察",
+      "when_to_use": "角色站在桥面且前方路线清晰时；看到滚木或缺口先选择 WAIT"
+    },
+    "RIGHT_STICK": {
+      "type": "stick",
+      "meaning": "视角或小游戏中的第二方向输入",
+      "how_to_press": "x/y 使用 -1 到 1；没有明确提示时保持回中",
+      "when_to_use": "画面明确要求右摇杆时；普通棋盘回合保持回中"
+    },
+    "WAIT": {
+      "type": "neutral",
+      "meaning": "释放所有按钮并让摇杆回中",
+      "how_to_press": "buttons=[\"WAIT\"]，不发送摇杆偏移",
+      "when_to_use": "加载、歧义、运动控制、无法确认安全动作、结果或暂停画面时"
+    }
+  },
+  "observations": {
+    "screen_state": {
+      "meaning": "当前是标题/菜单、棋盘回合、事件、小游戏说明、小游戏进行中还是结果画面",
+      "how_to_read": "先看 HUD、提示文本、玩家标记和结果面板，再选择动作",
+      "when_relevant": "每次决策都相关"
+    },
+    "turn_phase": {
+      "meaning": "当前玩家是否在掷骰子、选择路线/道具、移动或等待事件",
+      "how_to_read": "观察当前玩家标记、可选项、高亮框和 A/B 提示",
+      "when_relevant": "棋盘回合和事件场景"
+    },
+    "board_choices": {
+      "meaning": "棋盘路线、商店、道具或事件选项",
+      "how_to_read": "只在可见高亮和按钮提示明确时移动光标或确认",
+      "when_relevant": "出现两个或更多可选项时"
+    },
+    "minigame_state": {
+      "meaning": "小游戏说明、倒计时、进行中、结算或淘汰状态",
+      "how_to_read": "区分说明文字与实际操作提示，不要把倒计时当成输入指令",
+      "when_relevant": "进入小游戏后"
+    },
+    "input_prompt": {
+      "meaning": "画面明确要求的按钮、十字键或摇杆方向",
+      "how_to_read": "操作方法显示“移动”时使用左摇杆；结合角色位置、滚木和桥面缺口判断方向",
+      "when_relevant": "小游戏和菜单"
+    },
+    "motion_requirement": {
+      "meaning": "是否要求摇动、倾斜、旋转、陀螺仪、IR 或其他运动输入",
+      "how_to_read": "看到 motion/tilt/shake/gyro/rotate 等提示就标记为不支持",
+      "when_relevant": "本小游戏说明未显示体感要求；若运行中出现摇动/倾斜提示则选择 WAIT"
+    },
+    "timer": {
+      "meaning": "小游戏倒计时或限时提示",
+      "how_to_read": "只用于判断是否需要短输入；不要因为倒计时盲目连续发送动作",
+      "when_relevant": "限时小游戏"
+    },
+    "party_result": {
+      "meaning": "回合、小游戏或整局派对的结果面板",
+      "how_to_read": "看到排名、星星/金币统计或继续按钮时停止连续操作并等待",
+      "when_relevant": "小游戏结算和派对结束"
+    }
+  },
+  "capture": {
+    "device": "Hagibis",
+    "size": "640x480",
+    "framerate": 10
+  },
+  "runtime": {
+    "decision_interval_ms": 700,
+    "action_duration_ms": 250,
+    "min_action_confidence": 0.82
+  },
+  "candidates": [
+    {
+      "id": "wait",
+      "buttons": [
+        "WAIT"
+      ],
+      "duration_ms": 300,
+      "intent": "观察障碍",
+      "description": "释放输入并观察桥面、滚木和角色位置。"
+    },
+    {
+      "id": "move_up",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 0,
+        "y": 1
+      },
+      "duration_ms": 220,
+      "intent": "向终点前进",
+      "description": "左摇杆向上短推，沿桥向前移动。"
+    },
+    {
+      "id": "move_down",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 0,
+        "y": -1
+      },
+      "duration_ms": 180,
+      "intent": "后退避险",
+      "description": "左摇杆向下短推，避开前方滚木或缺口。"
+    },
+    {
+      "id": "move_left",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": -1,
+        "y": 0
+      },
+      "duration_ms": 180,
+      "intent": "横向躲避",
+      "description": "左摇杆向左短推，躲开障碍或调整落脚点。"
+    },
+    {
+      "id": "move_right",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 1,
+        "y": 0
+      },
+      "duration_ms": 180,
+      "intent": "横向躲避",
+      "description": "左摇杆向右短推，躲开障碍或调整落脚点。"
+    },
+    {
+      "id": "move_up_left",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": -0.7,
+        "y": 0.7
+      },
+      "duration_ms": 170,
+      "intent": "斜向前进",
+      "description": "左摇杆向左上短推，绕过右侧障碍。"
+    },
+    {
+      "id": "move_up_right",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 0.7,
+        "y": 0.7
+      },
+      "duration_ms": 170,
+      "intent": "斜向前进",
+      "description": "左摇杆向右上短推，绕过左侧障碍。"
+    }
+  ],
+  "minigame": {
+    "name": "危险桥梁",
+    "english_name": "Dangerous Bridge",
+    "players": "4人对战小游戏",
+    "objective": "注意别从桥上掉下去，并向终点前进；当心圆木和脚下。",
+    "operation": "移动（左摇杆）",
+    "motion_required": false,
+    "observed_instruction": "注意别从桥上掉下去，并向终点前进吧。当心圆木和脚下！",
+    "play_count_seen": 1
+  },
+  "jev_suitability": {
+    "level": "low",
+    "reason": "实时躲避滚木和桥面缺口，当前视觉决策延迟下不建议自动运行。",
+    "auto_run": false
+  }
+}

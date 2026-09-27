@@ -1,0 +1,444 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luffy.local/schemas/game-profile-v1.json",
+  "title": "Luffy game profile v1",
+  "description": "Fixed game and controller contract consumed by the capture, Jev decision, and execution layers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "game",
+    "introduction",
+    "objective",
+    "state_notes",
+    "controller",
+    "gameplay",
+    "controls",
+    "capture",
+    "runtime",
+    "candidates"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "game": {
+      "type": "string",
+      "minLength": 1
+    },
+    "introduction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state_notes": {
+      "type": "string",
+      "minLength": 1
+    },
+    "controller": {
+      "$ref": "#/$defs/controller"
+    },
+    "gameplay": {
+      "$ref": "#/$defs/gameplay"
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "A",
+        "B",
+        "X",
+        "Y",
+        "L",
+        "R",
+        "ZL",
+        "ZR",
+        "UP",
+        "DOWN",
+        "LEFT",
+        "RIGHT",
+        "L3",
+        "R3",
+        "PLUS",
+        "MINUS",
+        "HOME",
+        "CAPTURE",
+        "LEFT_STICK",
+        "RIGHT_STICK",
+        "WAIT"
+      ],
+      "properties": {
+        "A": {
+          "$ref": "#/$defs/control"
+        },
+        "B": {
+          "$ref": "#/$defs/control"
+        },
+        "X": {
+          "$ref": "#/$defs/control"
+        },
+        "Y": {
+          "$ref": "#/$defs/control"
+        },
+        "L": {
+          "$ref": "#/$defs/control"
+        },
+        "R": {
+          "$ref": "#/$defs/control"
+        },
+        "ZL": {
+          "$ref": "#/$defs/control"
+        },
+        "ZR": {
+          "$ref": "#/$defs/control"
+        },
+        "UP": {
+          "$ref": "#/$defs/control"
+        },
+        "DOWN": {
+          "$ref": "#/$defs/control"
+        },
+        "LEFT": {
+          "$ref": "#/$defs/control"
+        },
+        "RIGHT": {
+          "$ref": "#/$defs/control"
+        },
+        "L3": {
+          "$ref": "#/$defs/control"
+        },
+        "R3": {
+          "$ref": "#/$defs/control"
+        },
+        "PLUS": {
+          "$ref": "#/$defs/control"
+        },
+        "MINUS": {
+          "$ref": "#/$defs/control"
+        },
+        "HOME": {
+          "$ref": "#/$defs/control"
+        },
+        "CAPTURE": {
+          "$ref": "#/$defs/control"
+        },
+        "LEFT_STICK": {
+          "$ref": "#/$defs/control"
+        },
+        "RIGHT_STICK": {
+          "$ref": "#/$defs/control"
+        },
+        "WAIT": {
+          "$ref": "#/$defs/control"
+        }
+      }
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/observation"
+      }
+    },
+    "capture": {
+      "$ref": "#/$defs/capture"
+    },
+    "runtime": {
+      "$ref": "#/$defs/runtime"
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/$defs/candidate"
+      }
+    }
+  },
+  "$defs": {
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "meaning",
+        "how_to_press",
+        "when_to_use"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "button",
+            "stick",
+            "system",
+            "neutral"
+          ]
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "how_to_press": {
+          "type": "string",
+          "minLength": 1
+        },
+        "when_to_use": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "controller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "layout",
+        "button_encoding",
+        "supports_simultaneous",
+        "supports_sticks",
+        "supports_motion",
+        "unsupported_sensors"
+      ],
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layout": {
+          "type": "string",
+          "minLength": 1
+        },
+        "button_encoding": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supports_simultaneous": {
+          "const": true
+        },
+        "supports_sticks": {
+          "const": true
+        },
+        "supports_motion": {
+          "const": false
+        },
+        "unsupported_sensors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "gameplay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "completion_signal",
+        "active_states",
+        "non_active_states"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "race_laps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "completion_signal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "active_states": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "non_active_states": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "meaning",
+        "how_to_read",
+        "when_relevant"
+      ],
+      "properties": {
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "how_to_read": {
+          "type": "string",
+          "minLength": 1
+        },
+        "when_relevant": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "size",
+        "framerate"
+      ],
+      "properties": {
+        "device": {
+          "type": "string"
+        },
+        "size": {
+          "type": "string",
+          "minLength": 1
+        },
+        "framerate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_interval_ms",
+        "action_duration_ms",
+        "min_action_confidence"
+      ],
+      "properties": {
+        "decision_interval_ms": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "action_duration_ms": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "min_action_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "movement_switch_confirmations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        }
+      }
+    },
+    "stick": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "buttons",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "buttons": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "A",
+              "B",
+              "X",
+              "Y",
+              "L",
+              "R",
+              "ZL",
+              "ZR",
+              "UP",
+              "DOWN",
+              "LEFT",
+              "RIGHT",
+              "L3",
+              "R3",
+              "PLUS",
+              "MINUS",
+              "HOME",
+              "CAPTURE",
+              "WAIT"
+            ]
+          },
+          "minItems": 1
+        },
+        "left_stick": {
+          "$ref": "#/$defs/stick"
+        },
+        "right_stick": {
+          "$ref": "#/$defs/stick"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "intent": {
+          "type": "string"
+        },
+        "when_to_use": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

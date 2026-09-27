@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "id": "smpj-penguin-edge",
+  "description": "《千钧一发企鹅仔》独立小游戏配置：4 人对战，在雪橇越过冰面时选择时机松开缰索，尽量停在悬崖边缘而不掉下去。",
+  "game": "超级马里奥派对 空前盛会 / 千钧一发企鹅仔",
+  "introduction": "4 人对战小游戏。雪橇由酷冰怪牵引前进，玩家需要观察奇诺比奥的演示，在合适时机松开缰索，让雪橇停在距离边缘最近的位置。",
+  "objective": "观察雪橇与冰面边缘的距离，在不会越过边缘的时机松开缰索；掉入水中即失败。",
+  "state_notes": "小游戏说明页显示“松开缰索”，操作图标为单 Joy-Con 右侧按钮；在 Switch Pro 控制器映射中用 A 表示右侧确认键。开始阶段等待演示和倒计时，不要提前按 A；在活动阶段只在判断好位置后短按 A 释放缰索。Pico 没有陀螺仪、加速度计和震动，本小游戏不需要体感。",
+  "controller": {
+    "platform": "Nintendo Switch",
+    "layout": "Switch Pro Controller",
+    "button_encoding": "buttons is a simultaneous button list; left_stick and right_stick axes are normalized from -1 to 1; y=1 means up",
+    "supports_simultaneous": true,
+    "supports_sticks": true,
+    "supports_motion": false,
+    "unsupported_sensors": [
+      "gyroscope",
+      "accelerometer",
+      "rumble"
+    ]
+  },
+  "gameplay": {
+    "mode": "single_minigame",
+    "completion_signal": "sled_stop_or_fall_result",
+    "active_states": [
+      "instruction",
+      "toad_demo",
+      "countdown",
+      "sled_running",
+      "sled_stopped",
+      "fall_or_result"
+    ],
+    "non_active_states": [
+      "loading",
+      "motion_required",
+      "unsupported_minigame",
+      "paused"
+    ]
+  },
+  "controls": {
+    "A": {
+      "type": "button",
+      "meaning": "松开缰索，让雪橇停止滑行",
+      "how_to_press": "观察雪橇与边缘距离后短按 120–180 ms；只按一次",
+      "when_to_use": "活动阶段判断达到目标位置且不会越过边缘时"
+    },
+    "B": {
+      "type": "button",
+      "meaning": "取消、返回或退出当前选择",
+      "how_to_press": "通常短按；不确定时不要连续按",
+      "when_to_use": "画面明确显示返回/取消，或需要退出当前菜单时"
+    },
+    "X": {
+      "type": "button",
+      "meaning": "上下文动作或道具/辅助界面动作",
+      "how_to_press": "仅在画面明确标出 X 时短按",
+      "when_to_use": "可用道具、辅助界面或小游戏提示明确要求 X 时"
+    },
+    "Y": {
+      "type": "button",
+      "meaning": "次级上下文动作或道具/辅助界面动作",
+      "how_to_press": "仅在画面明确标出 Y 时短按",
+      "when_to_use": "小游戏或菜单明确要求 Y 时"
+    },
+    "L": {
+      "type": "button",
+      "meaning": "左肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 L 时"
+    },
+    "R": {
+      "type": "button",
+      "meaning": "右肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 R 时"
+    },
+    "ZL": {
+      "type": "button",
+      "meaning": "左扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZL 时"
+    },
+    "ZR": {
+      "type": "button",
+      "meaning": "右扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZR 时"
+    },
+    "UP": {
+      "type": "button",
+      "meaning": "十字键上，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向上移动时"
+    },
+    "DOWN": {
+      "type": "button",
+      "meaning": "十字键下，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向下移动时"
+    },
+    "LEFT": {
+      "type": "button",
+      "meaning": "十字键左，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向左移动时"
+    },
+    "RIGHT": {
+      "type": "button",
+      "meaning": "十字键右，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向右移动时"
+    },
+    "L3": {
+      "type": "button",
+      "meaning": "按下左摇杆",
+      "how_to_press": "仅在画面明确提示 L3 时短按",
+      "when_to_use": "画面明确显示 L3 时"
+    },
+    "R3": {
+      "type": "button",
+      "meaning": "按下右摇杆",
+      "how_to_press": "仅在画面明确提示 R3 时短按",
+      "when_to_use": "画面明确显示 R3 时"
+    },
+    "PLUS": {
+      "type": "system",
+      "meaning": "暂停或打开当前菜单",
+      "how_to_press": "仅在用户要求暂停或画面明确提示时短按",
+      "when_to_use": "需要暂停或查看菜单时；自动运行中默认不使用"
+    },
+    "MINUS": {
+      "type": "system",
+      "meaning": "打开地图、信息或次级菜单",
+      "how_to_press": "仅在画面明确提示时短按",
+      "when_to_use": "需要地图/信息或画面明确提示时"
+    },
+    "HOME": {
+      "type": "system",
+      "meaning": "返回 Switch 系统主页",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "离开游戏时；自动运行中禁止"
+    },
+    "CAPTURE": {
+      "type": "system",
+      "meaning": "保存 Switch 截图或视频",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "需要记录画面时"
+    },
+    "LEFT_STICK": {
+      "type": "stick",
+      "meaning": "小游戏中的移动、方向或瞄准输入",
+      "how_to_press": "x/y 使用 -1 到 1，y=1 表示向上；短时输入后回中",
+      "when_to_use": "画面明确显示摇杆方向，且不是运动控制提示时"
+    },
+    "RIGHT_STICK": {
+      "type": "stick",
+      "meaning": "视角或小游戏中的第二方向输入",
+      "how_to_press": "x/y 使用 -1 到 1；没有明确提示时保持回中",
+      "when_to_use": "画面明确要求右摇杆时；普通棋盘回合保持回中"
+    },
+    "WAIT": {
+      "type": "neutral",
+      "meaning": "保持缰索状态并观察演示、倒计时和雪橇位置",
+      "how_to_press": "buttons=[\"WAIT\"]，不发送摇杆偏移",
+      "when_to_use": "演示、倒计时、距离仍不明确或已经松开缰索后"
+    }
+  },
+  "observations": {
+    "screen_state": {
+      "meaning": "当前是标题/菜单、棋盘回合、事件、小游戏说明、小游戏进行中还是结果画面",
+      "how_to_read": "先看 HUD、提示文本、玩家标记和结果面板，再选择动作",
+      "when_relevant": "每次决策都相关"
+    },
+    "turn_phase": {
+      "meaning": "当前玩家是否在掷骰子、选择路线/道具、移动或等待事件",
+      "how_to_read": "观察当前玩家标记、可选项、高亮框和 A/B 提示",
+      "when_relevant": "棋盘回合和事件场景"
+    },
+    "board_choices": {
+      "meaning": "棋盘路线、商店、道具或事件选项",
+      "how_to_read": "只在可见高亮和按钮提示明确时移动光标或确认",
+      "when_relevant": "出现两个或更多可选项时"
+    },
+    "minigame_state": {
+      "meaning": "小游戏说明、倒计时、进行中、结算或淘汰状态",
+      "how_to_read": "区分说明文字与实际操作提示，不要把倒计时当成输入指令",
+      "when_relevant": "进入小游戏后"
+    },
+    "input_prompt": {
+      "meaning": "当前是否可以松开缰索",
+      "how_to_read": "操作方法写“松开缰索”；活动时用 A 释放，其他时间选择 WAIT",
+      "when_relevant": "说明页、演示和活动阶段"
+    },
+    "motion_requirement": {
+      "meaning": "是否要求摇动、倾斜、旋转、陀螺仪、IR 或其他运动输入",
+      "how_to_read": "本小游戏说明未显示体感；若运行中出现体感提示则选择 WAIT",
+      "when_relevant": "进入小游戏后"
+    },
+    "timer": {
+      "meaning": "小游戏倒计时或限时提示",
+      "how_to_read": "只用于判断是否需要短输入；不要因为倒计时盲目连续发送动作",
+      "when_relevant": "限时小游戏"
+    },
+    "party_result": {
+      "meaning": "回合、小游戏或整局派对的结果面板",
+      "how_to_read": "看到排名、星星/金币统计或继续按钮时停止连续操作并等待",
+      "when_relevant": "小游戏结算和派对结束"
+    },
+    "sled_distance": {
+      "meaning": "雪橇与冰面边缘的剩余距离和滑行速度",
+      "how_to_read": "观察雪橇相对悬崖边缘的位置，结合演示判断惯性余量",
+      "when_relevant": "倒计时结束到松开缰索前"
+    }
+  },
+  "capture": {
+    "device": "Hagibis",
+    "size": "640x480",
+    "framerate": 10
+  },
+  "runtime": {
+    "decision_interval_ms": 500,
+    "action_duration_ms": 180,
+    "min_action_confidence": 0.86
+  },
+  "candidates": [
+    {
+      "id": "wait",
+      "buttons": [
+        "WAIT"
+      ],
+      "duration_ms": 350,
+      "intent": "观察演示或滑行",
+      "description": "保持缰索状态，观察奇诺比奥演示、倒计时和雪橇位置。"
+    },
+    {
+      "id": "release_reins",
+      "buttons": [
+        "A"
+      ],
+      "duration_ms": 150,
+      "intent": "松开缰索",
+      "description": "在判断雪橇会停在边缘前短按 A，释放缰索。"
+    },
+    {
+      "id": "release_reins_late",
+      "buttons": [
+        "A"
+      ],
+      "duration_ms": 120,
+      "intent": "最后时机释放",
+      "description": "距离边缘很近但仍安全时短按 A；只有画面明确支持时使用。"
+    },
+    {
+      "id": "release_reins_early",
+      "buttons": [
+        "A"
+      ],
+      "duration_ms": 120,
+      "intent": "提前释放保命",
+      "description": "无法确认距离或即将越界时短按 A，优先避免掉入水中。"
+    }
+  ],
+  "minigame": {
+    "name": "千钧一发企鹅仔",
+    "english_name": "Sled to the Edge",
+    "players": "4人对战小游戏",
+    "objective": "松开缰索，让自己能在极限位置停下；观察演示判断松开时机。",
+    "operation": "松开缰索（单 Joy-Con 右侧按钮；Pro 手柄映射为 A）",
+    "motion_required": false,
+    "observed_instruction": "松开缰索，让自己能在极限位置停下。仔细观看奇诺比奥他们的演示，来判断松开缰索的时机吧！",
+    "play_count_seen": 2,
+    "high_score_seen": "1.21m"
+  },
+  "jev_suitability": {
+    "level": "low",
+    "reason": "核心是精确判断惯性并在瞬间松开缰索，当前视觉决策延迟下不建议自动运行。",
+    "auto_run": false
+  }
+}

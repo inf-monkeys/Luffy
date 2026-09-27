@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "id": "smpj-thwomp-the-difference",
+  "description": "《找出咚咚后的差异》独立小游戏配置：4 人对战，观察咚咚升起后露出的水果图，找出唯一不同的一张并按对应按键抢答。",
+  "game": "超级马里奥派对 空前盛会 / 找出咚咚后的差异",
+  "introduction": "4 人对战小游戏。每局五轮，咚咚会完全升起或只升起一半后落下；玩家要记住每个咚咚后面的水果图，找出与其他图片不同的一张。前两轮通常有三个咚咚，第三轮起有四个咚咚；差异可能是不同水果，也可能是同一种水果的外观细节。每轮只能选择一次，所以不要着急选择，记住每个图片的特征后再做选择，但是也注意不要超时。",
+  "objective": "在每轮 20 秒内识别唯一不同的水果图片，并按该图片下方显示的按键尽快选择；答对按抢答顺序得 5、3、2、1 分。",
+  "state_notes": "说明页和倒计时阶段保持 WAIT。活动阶段先观察四个横向图位；每个图位下方都有黑色圆形按键提示，黄色点的位置代表该图位对应的面部键（左=Y、上=X、右=A、下=B）。先比较水果图或同类水果的细节，再按“差异图位下方的提示键”一次；不要按图片的屏幕位置推断按键，也不要用摇杆移动光标。咚咚仍遮住大部分图片、差异不明确或已经提交后选择 WAIT。 由于每轮限时 20 秒，图片开始露出后按约 350 ms 节奏复查；确认差异和提示点后立即短按，避免连续重复按键。每轮只能选择一次，所以不要着急选择，记住每个图片的特征后再做选择，但是也注意不要超时。",
+  "controller": {
+    "platform": "Nintendo Switch",
+    "layout": "Switch Pro Controller",
+    "button_encoding": "buttons is a simultaneous button list; left_stick and right_stick axes are normalized from -1 to 1; y=1 means up",
+    "supports_simultaneous": true,
+    "supports_sticks": true,
+    "supports_motion": false,
+    "unsupported_sensors": [
+      "gyroscope",
+      "accelerometer",
+      "rumble"
+    ]
+  },
+  "gameplay": {
+    "mode": "single_minigame",
+    "completion_signal": "five_round_final_result_screen",
+    "active_states": [
+      "instruction",
+      "countdown",
+      "round_reveal",
+      "round_selection",
+      "round_result",
+      "next_round",
+      "final_result"
+    ],
+    "non_active_states": [
+      "loading",
+      "motion_required",
+      "unsupported_minigame",
+      "paused"
+    ]
+  },
+  "controls": {
+    "A": {
+      "type": "button",
+      "meaning": "按画面右侧提示选择右侧图片，或执行菜单确认",
+      "how_to_press": "确认右侧图片是差异后短按 120–160 ms；每轮只按一次",
+      "when_to_use": "右侧图片唯一不同时，或画面明确提示确认时"
+    },
+    "B": {
+      "type": "button",
+      "meaning": "按画面下方提示选择下方图片，或返回/取消",
+      "how_to_press": "确认下方图片是差异后短按 120–160 ms；每轮只按一次",
+      "when_to_use": "下方图片唯一不同时，或画面明确显示返回/取消时"
+    },
+    "X": {
+      "type": "button",
+      "meaning": "按画面上方提示选择上方图片，或执行上下文动作",
+      "how_to_press": "确认上方图片是差异后短按 120–160 ms；每轮只按一次",
+      "when_to_use": "上方图片唯一不同时，或画面明确提示 X 时"
+    },
+    "Y": {
+      "type": "button",
+      "meaning": "按画面左侧提示选择左侧图片，或执行上下文动作",
+      "how_to_press": "确认左侧图片是差异后短按 120–160 ms；每轮只按一次",
+      "when_to_use": "左侧图片唯一不同时，或画面明确提示 Y 时"
+    },
+    "L": {
+      "type": "button",
+      "meaning": "左肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 L 时"
+    },
+    "R": {
+      "type": "button",
+      "meaning": "右肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 R 时"
+    },
+    "ZL": {
+      "type": "button",
+      "meaning": "左扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZL 时"
+    },
+    "ZR": {
+      "type": "button",
+      "meaning": "右扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZR 时"
+    },
+    "UP": {
+      "type": "button",
+      "meaning": "十字键上，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向上移动时"
+    },
+    "DOWN": {
+      "type": "button",
+      "meaning": "十字键下，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向下移动时"
+    },
+    "LEFT": {
+      "type": "button",
+      "meaning": "十字键左，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向左移动时"
+    },
+    "RIGHT": {
+      "type": "button",
+      "meaning": "十字键右，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向右移动时"
+    },
+    "L3": {
+      "type": "button",
+      "meaning": "按下左摇杆",
+      "how_to_press": "仅在画面明确提示 L3 时短按",
+      "when_to_use": "画面明确显示 L3 时"
+    },
+    "R3": {
+      "type": "button",
+      "meaning": "按下右摇杆",
+      "how_to_press": "仅在画面明确提示 R3 时短按",
+      "when_to_use": "画面明确显示 R3 时"
+    },
+    "PLUS": {
+      "type": "system",
+      "meaning": "暂停或打开当前菜单",
+      "how_to_press": "仅在用户要求暂停或画面明确提示时短按",
+      "when_to_use": "需要暂停或查看菜单时；自动运行中默认不使用"
+    },
+    "MINUS": {
+      "type": "system",
+      "meaning": "打开地图、信息或次级菜单",
+      "how_to_press": "仅在画面明确提示时短按",
+      "when_to_use": "需要地图/信息或画面明确提示时"
+    },
+    "HOME": {
+      "type": "system",
+      "meaning": "返回 Switch 系统主页",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "离开游戏时；自动运行中禁止"
+    },
+    "CAPTURE": {
+      "type": "system",
+      "meaning": "保存 Switch 截图或视频",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "需要记录画面时"
+    },
+    "LEFT_STICK": {
+      "type": "stick",
+      "meaning": "本小游戏不用于选择图片；仅保留通用控制能力",
+      "how_to_press": "保持回中，不要用摇杆选择答案",
+      "when_to_use": "本小游戏活动阶段不使用"
+    },
+    "RIGHT_STICK": {
+      "type": "stick",
+      "meaning": "本小游戏不用于选择图片；仅保留通用控制能力",
+      "how_to_press": "保持回中，不要用摇杆选择答案",
+      "when_to_use": "本小游戏活动阶段不使用"
+    },
+    "WAIT": {
+      "type": "neutral",
+      "meaning": "释放所有按键并观察咚咚、图片和结果",
+      "how_to_press": "buttons=[\"WAIT\"]，不发送摇杆偏移",
+      "when_to_use": "图片仍被遮挡、差异不明确、已提交答案或处于结算/暂停画面时"
+    }
+  },
+  "observations": {
+    "screen_state": {
+      "meaning": "当前是标题/菜单、小游戏说明、某轮图片展示、轮次结算还是最终结果画面",
+      "how_to_read": "先看提示文本、倒计时、咚咚数量和结果面板，再决定是否输入",
+      "when_relevant": "每次决策都相关"
+    },
+    "minigame_state": {
+      "meaning": "说明、倒计时、咚咚升起展示、选择窗口、结算或最终排名",
+      "how_to_read": "区分展示阶段与可抢答阶段；结算和最终排名时停止连续按键",
+      "when_relevant": "进入小游戏后"
+    },
+    "thwomp_count": {
+      "meaning": "当前轮有几个咚咚和图片选项",
+      "how_to_read": "数可见位置；第 1–2 轮通常为 3 个，第 3–5 轮通常为 4 个",
+      "when_relevant": "每轮展示时"
+    },
+    "revealed_images": {
+      "meaning": "每个咚咚后面的水果图及其位置",
+      "how_to_read": "比较各图位露出的颜色、形状、切面、叶片和朝向；咚咚只升一半时只把可见细节作为证据，仍被遮挡就等待下一帧",
+      "when_relevant": "图片展示和选择阶段"
+    },
+    "button_prompts": {
+      "meaning": "每个横向图位下方的黑色圆形按键提示；黄色点表示该图位应按的面部键",
+      "how_to_read": "逐个读取黄色点方向：左=Y、上=X、右=A、下=B。答案键由差异图位下方的提示决定，与图位在屏幕上的左/右位置无关",
+      "when_relevant": "图片露出且准备抢答时"
+    },
+    "timer": {
+      "meaning": "本轮剩余的 20 秒倒计时",
+      "how_to_read": "用于判断是否还有时间核对；不要因倒计时盲目连按",
+      "when_relevant": "每轮选择阶段"
+    },
+    "party_result": {
+      "meaning": "轮次得分、最终排名或继续按钮",
+      "how_to_read": "看到得分/排名面板时停止输入并等待下一轮或结束",
+      "when_relevant": "轮次结算和小游戏结束"
+    },
+    "round_selection": {
+      "meaning": "图片已足够露出、可以按对应提示键抢答的窗口",
+      "how_to_read": "只有在至少能确认一个图位与其他图不同，并能读清该图位下方黄色提示点时才输入；按键后等待结果",
+      "when_relevant": "每轮图片展示后"
+    }
+  },
+  "capture": {
+    "device": "Hagibis",
+    "size": "640x480",
+    "framerate": 15
+  },
+  "runtime": {
+    "decision_interval_ms": 350,
+    "action_duration_ms": 120,
+    "min_action_confidence": 0.82,
+    "visual_memory_frames": 2,
+    "must_answer_before_timeout": true,
+    "force_answer_after_waits": 10
+  },
+  "candidates": [
+    {
+      "id": "wait",
+      "buttons": [
+        "WAIT"
+      ],
+      "duration_ms": 300,
+      "intent": "继续观察",
+      "description": "保持所有输入释放，等待咚咚升起、图片露出或结果画面稳定。"
+    },
+    {
+      "id": "choose_y",
+      "buttons": [
+        "Y"
+      ],
+      "duration_ms": 140,
+      "intent": "按左提示键抢答",
+      "description": "差异图位下方的黄色提示点在左侧时，短按 Y；这表示按键提示，不代表选择最左图。"
+    },
+    {
+      "id": "choose_x",
+      "buttons": [
+        "X"
+      ],
+      "duration_ms": 140,
+      "intent": "按上提示键抢答",
+      "description": "差异图位下方的黄色提示点在上方时，短按 X；这表示按键提示，不代表选择上方图。"
+    },
+    {
+      "id": "choose_a",
+      "buttons": [
+        "A"
+      ],
+      "duration_ms": 140,
+      "intent": "按右提示键抢答",
+      "description": "差异图位下方的黄色提示点在右侧时，短按 A；这表示按键提示，不代表选择最右图。"
+    },
+    {
+      "id": "choose_b",
+      "buttons": [
+        "B"
+      ],
+      "duration_ms": 140,
+      "intent": "按下提示键抢答",
+      "description": "差异图位下方的黄色提示点在下方时，短按 B；这表示按键提示，不代表选择下方图。"
+    }
+  ],
+  "minigame": {
+    "name": "找出咚咚后的差异",
+    "english_name": "Thwomp the Difference",
+    "players": "4人对战小游戏",
+    "objective": "找出咚咚后唯一不同的水果图片并尽快按对应按键；五轮结束后按总分排名。",
+    "operation": "按差异图位下方黑色圆形提示中的黄色点对应面部键（左 Y、上 X、右 A、下 B）；四个图位横向排列，不按图位屏幕位置映射",
+    "motion_required": false,
+    "observed_instruction": "找出咚咚后的差异。越快答对，得分越高，所以要快而仔细！",
+    "rounds": 5,
+    "time_limit_seconds_per_round": 20,
+    "points_by_answer_order": [
+      5,
+      3,
+      2,
+      1
+    ],
+    "play_count_seen": 0
+  },
+  "jev_suitability": {
+    "level": "medium",
+    "reason": "实测主玩家一轮运行拿到 10 分，说明配置已能完成部分抢答，但等待节奏偏保守。四个横向图位和提示图标清晰后应快速复查；提高到 15 fps、350 ms 决策间隔、120 ms 短按并将门槛设为 0.82，以增加有效抢答次数，同时保留遮挡/歧义时 WAIT。",
+    "auto_run": true
+  }
+}

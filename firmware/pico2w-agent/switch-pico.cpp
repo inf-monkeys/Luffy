@@ -1,0 +1,283 @@
+#include <stdio.h>
+#include "bsp/board.h"
+#include "pico/stdlib.h"
+#include "tusb.h"
+#include "switch_pro_driver.h"
+#if !defined(SWITCH_PICO_BLUEPAD32) && !defined(SWITCH_PICO_WIFI)
+#include "hardware/uart.h"
+#elif defined(SWITCH_PICO_WIFI)
+#include "wifi_input_backend.h"
+#else
+#include "bluepad32_input_backend.h"
+#include "bootsel_pairing_button.h"
+#endif
+
+#ifdef SWITCH_PICO_LOG
+#define LOG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define LOG_PRINTF(...) ((void)0)
+#endif
+
+#if !defined(SWITCH_PICO_BLUEPAD32) && !defined(SWITCH_PICO_WIFI)
+// UART1 is reserved for external input frames from the host PC.
+#define UART_ID uart1
+#define BAUD_RATE 921600
+#define UART_TX_PIN 4
+#define UART_RX_PIN 5
+#define UART_RUMBLE_HEADER 0xBB
+#define UART_RUMBLE_TYPE 0x02
+#endif
+
+#ifdef SWITCH_PICO_BLUEPAD32
+static_assert(SWITCH_PICO_HID_INSTANCE_COUNT ==
+              BLUEPAD32_INPUT_BACKEND_SLOT_COUNT);
+static bool g_last_ready[BLUEPAD32_INPUT_BACKEND_SLOT_COUNT]{};
+static SwitchInputState
+    g_user_states[BLUEPAD32_INPUT_BACKEND_SLOT_COUNT]{};
+#else
+static constexpr uint8_t SWITCH_HID_INSTANCE = 0;
+static bool g_last_ready = false;
+static SwitchInputState g_user_state;
+#endif
+
+static bool g_last_mounted = false;
+
+#if !defined(SWITCH_PICO_BLUEPAD32) && !defined(SWITCH_PICO_WIFI)
+static void init_uart_input() {
+    uart_init(UART_ID, BAUD_RATE);
+    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+    uart_set_format(UART_ID, 8, 1, UART_PARITY_NONE);
+}
+#endif
+
+static SwitchInputState neutral_input() {
+    SwitchInputState state{};
+    state.lx = SWITCH_PRO_JOYSTICK_MID;
+    state.ly = SWITCH_PRO_JOYSTICK_MID;
+    state.rx = SWITCH_PRO_JOYSTICK_MID;
+    state.ry = SWITCH_PRO_JOYSTICK_MID;
+    return state;
+}
+
+#if !defined(SWITCH_PICO_BLUEPAD32) && !defined(SWITCH_PICO_WIFI)
+static void send_rumble_uart_frame(const SwitchRumbleOutput& rumble) {
+    uint8_t frame[5] = {
+        UART_RUMBLE_HEADER,
+        UART_RUMBLE_TYPE,
+        rumble.low_frequency_magnitude,
+        rumble.high_frequency_magnitude,
+        0,
+    };
+
+    for (uint8_t i = 0; i < 4; ++i) {
+        frame[4] = static_cast<uint8_t>(frame[4] + frame[i]);
+    }
+    uart_write_blocking(UART_ID, frame, sizeof(frame));
+}
+#endif
+
+static void on_rumble_from_switch(uint8_t instance,
+                                  const SwitchRumbleOutput& rumble) {
+#ifdef SWITCH_PICO_BLUEPAD32
+    if (instance >= BLUEPAD32_INPUT_BACKEND_SLOT_COUNT) {
+        return;
+    }
+    bluepad32_input_backend_queue_rumble(instance, rumble);
+#elif defined(SWITCH_PICO_WIFI)
+    (void)instance;
+    (void)rumble;
+#else
+    if (instance != SWITCH_HID_INSTANCE) {
+        return;
+    }
+    send_rumble_uart_frame(rumble);
+#endif
+}
+
+#if !defined(SWITCH_PICO_BLUEPAD32) && !defined(SWITCH_PICO_WIFI)
+// Consume UART bytes and forward complete frames to the Switch Pro driver.
+static bool poll_uart_frames() {
+    static uint8_t buffer[64];
+    static uint8_t index = 0;
+    static uint8_t expected_len = 0;
+    static absolute_time_t last_byte_time = {0};
+    static bool has_last_byte = false;
+    bool new_data = false;
+
+    while (uart_is_readable(UART_ID)) {
+        uint8_t byte = uart_getc(UART_ID);
+
+        uint64_t now = to_ms_since_boot(get_absolute_time());
+        if (has_last_byte && (now - to_ms_since_boot(last_byte_time)) > 20) {
+            index = 0; // stale data, restart frame
+            expected_len = 0;
+        }
+        last_byte_time = get_absolute_time();
+        has_last_byte = true;
+
+        if (index == 0) {
+            if (byte != 0xAA) {
+                continue; // wait for start-of-frame marker
+            }
+        }
+
+        if (index >= sizeof(buffer)) {
+            index = 0;
+            expected_len = 0;
+        }
+
+        buffer[index++] = byte;
+        if (index == 3) {
+            expected_len = static_cast<uint8_t>(buffer[2] + 4u);
+            if (expected_len < 12 || expected_len > sizeof(buffer)) {
+                index = 0;
+                expected_len = 0;
+                continue;
+            }
+        }
+
+        if (expected_len > 0 && index >= expected_len) {
+            SwitchInputState parsed{};
+            if (switch_pro_apply_uart_packet(buffer, expected_len, parsed)) {
+                g_user_state = parsed;
+                new_data = true;
+                LOG_PRINTF("[UART] packet buttons=0x%04x hat=%u lx=%u ly=%u rx=%u ry=%u\n",
+                           (parsed.button_a   ? SWITCH_PRO_MASK_A   : 0) |
+                           (parsed.button_b   ? SWITCH_PRO_MASK_B   : 0) |
+                           (parsed.button_x   ? SWITCH_PRO_MASK_X   : 0) |
+                           (parsed.button_y   ? SWITCH_PRO_MASK_Y   : 0) |
+                           (parsed.button_l   ? SWITCH_PRO_MASK_L   : 0) |
+                           (parsed.button_r   ? SWITCH_PRO_MASK_R   : 0) |
+                           (parsed.button_zl  ? SWITCH_PRO_MASK_ZL  : 0) |
+                           (parsed.button_zr  ? SWITCH_PRO_MASK_ZR  : 0) |
+                           (parsed.button_plus? SWITCH_PRO_MASK_PLUS: 0) |
+                           (parsed.button_minus?SWITCH_PRO_MASK_MINUS:0) |
+                           (parsed.button_home?SWITCH_PRO_MASK_HOME:0) |
+                           (parsed.button_capture?SWITCH_PRO_MASK_CAPTURE:0) |
+                           (parsed.button_l3  ? SWITCH_PRO_MASK_L3  : 0) |
+                           (parsed.button_r3  ? SWITCH_PRO_MASK_R3  : 0),
+                           parsed.dpad_up ? SWITCH_PRO_HAT_UP :
+                            parsed.dpad_down ? SWITCH_PRO_HAT_DOWN :
+                            parsed.dpad_left ? SWITCH_PRO_HAT_LEFT :
+                            parsed.dpad_right ? SWITCH_PRO_HAT_RIGHT : SWITCH_PRO_HAT_NOTHING,
+                            parsed.lx >> 8, parsed.ly >> 8, parsed.rx >> 8, parsed.ry >> 8);
+            }
+            index = 0;
+            expected_len = 0;
+        }
+    }
+
+    return new_data;
+}
+#endif
+
+static void log_usb_state() {
+    bool mounted = tud_mounted();
+    if (mounted != g_last_mounted) {
+        g_last_mounted = mounted;
+        LOG_PRINTF("[USB] %s\n", mounted ? "mounted" : "unmounted");
+    }
+
+#ifdef SWITCH_PICO_BLUEPAD32
+    for (uint8_t instance = 0;
+         instance < BLUEPAD32_INPUT_BACKEND_SLOT_COUNT; ++instance) {
+        const bool ready = switch_pro_is_ready(instance);
+        if (ready != g_last_ready[instance]) {
+            g_last_ready[instance] = ready;
+            LOG_PRINTF("[SWITCH %u] driver %s\n", instance,
+                       ready ? "ready (handshake OK)" : "not ready");
+        }
+    }
+#else
+    const bool ready = switch_pro_is_ready(SWITCH_HID_INSTANCE);
+    if (ready != g_last_ready) {
+        g_last_ready = ready;
+        LOG_PRINTF("[SWITCH] driver %s\n",
+                   ready ? "ready (handshake OK)" : "not ready");
+    }
+#endif
+}
+
+int main() {
+    board_init();
+    stdio_init_all();
+
+#ifdef SWITCH_PICO_BLUEPAD32
+    bluepad32_input_backend_init();
+#elif defined(SWITCH_PICO_WIFI)
+    wifi_input_backend_init();
+#else
+    init_uart_input();
+#endif
+
+    tusb_init();
+#ifdef SWITCH_PICO_BLUEPAD32
+    for (uint8_t instance = 0;
+         instance < BLUEPAD32_INPUT_BACKEND_SLOT_COUNT; ++instance) {
+        switch_pro_init(instance);
+        switch_pro_set_rumble_callback(instance, on_rumble_from_switch);
+        g_user_states[instance] = neutral_input();
+        switch_pro_set_input(instance, g_user_states[instance]);
+    }
+#elif defined(SWITCH_PICO_WIFI)
+    switch_pro_init(SWITCH_HID_INSTANCE);
+    switch_pro_set_rumble_callback(SWITCH_HID_INSTANCE,
+                                   on_rumble_from_switch);
+    g_user_state = neutral_input();
+    switch_pro_set_input(SWITCH_HID_INSTANCE, g_user_state);
+#else
+    switch_pro_init(SWITCH_HID_INSTANCE);
+    switch_pro_set_rumble_callback(SWITCH_HID_INSTANCE,
+                                   on_rumble_from_switch);
+    g_user_state = neutral_input();
+    switch_pro_set_input(SWITCH_HID_INSTANCE, g_user_state);
+#endif
+
+#ifdef SWITCH_PICO_BLUEPAD32
+    bluepad32_input_backend_start();
+    LOG_PRINTF("[BOOT] switch-pico starting (Bluepad32 wireless @ 115200)\n");
+#elif defined(SWITCH_PICO_WIFI)
+    LOG_PRINTF("[BOOT] switch-pico starting (Wi-Fi action API)\n");
+#else
+    LOG_PRINTF("[BOOT] switch-pico starting (UART0 log @ 115200)\n");
+    LOG_PRINTF("[INFO] UART1 pins TX=%d RX=%d baud=%d\n",
+           UART_TX_PIN, UART_RX_PIN, BAUD_RATE);
+#endif
+
+    while (true) {
+        tud_task();          // USB device tasks
+#ifdef SWITCH_PICO_BLUEPAD32
+        switch (bootsel_pairing_button_task()) {
+            case BootselPairingButtonEvent::kOpenPairing:
+                bluepad32_input_backend_open_pairing_window();
+                break;
+            case BootselPairingButtonEvent::kClearPairings:
+                bluepad32_input_backend_clear_pairings();
+                break;
+            case BootselPairingButtonEvent::kNone:
+                break;
+        }
+        for (uint8_t instance = 0;
+             instance < BLUEPAD32_INPUT_BACKEND_SLOT_COUNT; ++instance) {
+            bluepad32_input_backend_snapshot(instance,
+                                             &g_user_states[instance]);
+            switch_pro_set_input(instance, g_user_states[instance]);
+            if (switch_pro_task(instance)) {
+                bluepad32_input_backend_report_sent(instance);
+            }
+        }
+#elif defined(SWITCH_PICO_WIFI)
+        wifi_input_backend_snapshot(&g_user_state);
+        switch_pro_set_input(SWITCH_HID_INSTANCE, g_user_state);
+        (void)switch_pro_task(SWITCH_HID_INSTANCE);
+#else
+        bool new_data = poll_uart_frames();  // Pull controller state from UART1
+        (void)new_data;
+        SwitchInputState state = g_user_state;
+        switch_pro_set_input(SWITCH_HID_INSTANCE, state);
+        (void)switch_pro_task(SWITCH_HID_INSTANCE);
+#endif
+        log_usb_state();
+    }
+}

@@ -5,9 +5,9 @@
   "type": "module",
   "engines": { "node": ">=20.11" },
   "scripts": {
-    "dev": "node --watch --env-file=.env src/server.mjs",
-    "start": "node --env-file=.env src/server.mjs",
-    "check": "node --check src/server.mjs && .venv/bin/python -m py_compile src/opencv_perception.py",
-    "setup:vision": "python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt"
+    "dev": "node --experimental-websocket --watch --env-file=.env src/server.mjs",
+    "start": "node --experimental-websocket --env-file=.env src/server.mjs",
+    "live:drive": "node scripts/live_driver.mjs",
+    "check": "node --check src/server.mjs && node --check src/runtime.mjs && node --check scripts/live_driver.mjs"
   }
 }

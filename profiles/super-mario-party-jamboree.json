@@ -1,0 +1,350 @@
+{
+  "schema_version": 1,
+  "id": "super-mario-party-jamboree",
+  "description": "Super Mario Party Jamboree board-mode and non-motion minigame profile. Motion-controlled minigames are deliberately gated to WAIT because Pico 2 W has no motion sensors.",
+  "game": "超级马里奥派对 空前盛会 / Super Mario Party Jamboree on Nintendo Switch",
+  "introduction": "A Nintendo Switch party board game with turn-based board movement, dice rolls, item and space choices, event scenes, and short minigames. The screen can move between menus, a board turn, minigame instructions, active minigame play, and results. Some modes require gyro, shaking, tilting, or other motion input that this Pico controller cannot provide.",
+  "objective": "Observe the current board or minigame state and choose one short legal controller action. Navigate menus and board prompts conservatively; in a time-critical or motion-controlled minigame, choose WAIT unless the visible prompt clearly matches a supported button or left-stick action.",
+  "state_notes": "A usually confirms, rolls the dice, selects a highlighted option, or performs the visible primary minigame action; B usually backs out. Use the D-pad for explicit menu or board cursor prompts. Use the left stick only when the active minigame visibly asks for directional movement or aiming. X/Y/L/R/ZL/ZR are described for context but are not offered as automatic candidates until the screen clearly identifies their role. PLUS, MINUS, HOME, and CAPTURE are not automatic gameplay actions. Pico has no gyroscope, accelerometer, or rumble, so choose WAIT for shake, tilt, rotate, gyro, IR, or motion-control prompts. Do not infer a board route or minigame rule from a single ambiguous frame.",
+  "controller": {
+    "platform": "Nintendo Switch",
+    "layout": "Switch Pro Controller",
+    "button_encoding": "buttons is a simultaneous button list; left_stick and right_stick axes are normalized from -1 to 1; y=1 means up",
+    "supports_simultaneous": true,
+    "supports_sticks": true,
+    "supports_motion": false,
+    "unsupported_sensors": [
+      "gyroscope",
+      "accelerometer",
+      "rumble"
+    ]
+  },
+  "gameplay": {
+    "mode": "party_board_and_non_motion_minigames",
+    "completion_signal": "party_results_screen_or_user_stop",
+    "active_states": [
+      "board_turn",
+      "dice_prompt",
+      "board_choice",
+      "event_scene",
+      "minigame_instruction",
+      "supported_minigame_active",
+      "minigame_result"
+    ],
+    "non_active_states": [
+      "title_menu",
+      "home_menu",
+      "loading",
+      "motion_required",
+      "unsupported_minigame",
+      "party_results",
+      "paused"
+    ]
+  },
+  "controls": {
+    "A": {
+      "type": "button",
+      "meaning": "确认、掷骰子、选择高亮项目或执行画面提示的主动作",
+      "how_to_press": "通常短按 120–250 ms；只有画面明确要求持续输入时才保持",
+      "when_to_use": "画面出现确认、掷骰子、选择、继续或主动作提示时"
+    },
+    "B": {
+      "type": "button",
+      "meaning": "取消、返回或退出当前选择",
+      "how_to_press": "通常短按；不确定时不要连续按",
+      "when_to_use": "画面明确显示返回/取消，或需要退出当前菜单时"
+    },
+    "X": {
+      "type": "button",
+      "meaning": "上下文动作或道具/辅助界面动作",
+      "how_to_press": "仅在画面明确标出 X 时短按",
+      "when_to_use": "可用道具、辅助界面或小游戏提示明确要求 X 时"
+    },
+    "Y": {
+      "type": "button",
+      "meaning": "次级上下文动作或道具/辅助界面动作",
+      "how_to_press": "仅在画面明确标出 Y 时短按",
+      "when_to_use": "小游戏或菜单明确要求 Y 时"
+    },
+    "L": {
+      "type": "button",
+      "meaning": "左肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 L 时"
+    },
+    "R": {
+      "type": "button",
+      "meaning": "右肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 R 时"
+    },
+    "ZL": {
+      "type": "button",
+      "meaning": "左扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZL 时"
+    },
+    "ZR": {
+      "type": "button",
+      "meaning": "右扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZR 时"
+    },
+    "UP": {
+      "type": "button",
+      "meaning": "十字键上，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向上移动时"
+    },
+    "DOWN": {
+      "type": "button",
+      "meaning": "十字键下，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向下移动时"
+    },
+    "LEFT": {
+      "type": "button",
+      "meaning": "十字键左，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向左移动时"
+    },
+    "RIGHT": {
+      "type": "button",
+      "meaning": "十字键右，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向右移动时"
+    },
+    "L3": {
+      "type": "button",
+      "meaning": "按下左摇杆",
+      "how_to_press": "仅在画面明确提示 L3 时短按",
+      "when_to_use": "画面明确显示 L3 时"
+    },
+    "R3": {
+      "type": "button",
+      "meaning": "按下右摇杆",
+      "how_to_press": "仅在画面明确提示 R3 时短按",
+      "when_to_use": "画面明确显示 R3 时"
+    },
+    "PLUS": {
+      "type": "system",
+      "meaning": "暂停或打开当前菜单",
+      "how_to_press": "仅在用户要求暂停或画面明确提示时短按",
+      "when_to_use": "需要暂停或查看菜单时；自动运行中默认不使用"
+    },
+    "MINUS": {
+      "type": "system",
+      "meaning": "打开地图、信息或次级菜单",
+      "how_to_press": "仅在画面明确提示时短按",
+      "when_to_use": "需要地图/信息或画面明确提示时"
+    },
+    "HOME": {
+      "type": "system",
+      "meaning": "返回 Switch 系统主页",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "离开游戏时；自动运行中禁止"
+    },
+    "CAPTURE": {
+      "type": "system",
+      "meaning": "保存 Switch 截图或视频",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "需要记录画面时"
+    },
+    "LEFT_STICK": {
+      "type": "stick",
+      "meaning": "小游戏中的移动、方向或瞄准输入",
+      "how_to_press": "x/y 使用 -1 到 1，y=1 表示向上；短时输入后回中",
+      "when_to_use": "画面明确显示摇杆方向，且不是运动控制提示时"
+    },
+    "RIGHT_STICK": {
+      "type": "stick",
+      "meaning": "视角或小游戏中的第二方向输入",
+      "how_to_press": "x/y 使用 -1 到 1；没有明确提示时保持回中",
+      "when_to_use": "画面明确要求右摇杆时；普通棋盘回合保持回中"
+    },
+    "WAIT": {
+      "type": "neutral",
+      "meaning": "释放所有按钮并让摇杆回中",
+      "how_to_press": "buttons=[\"WAIT\"]，不发送摇杆偏移",
+      "when_to_use": "加载、歧义、运动控制、无法确认安全动作、结果或暂停画面时"
+    }
+  },
+  "observations": {
+    "screen_state": {
+      "meaning": "当前是标题/菜单、棋盘回合、事件、小游戏说明、小游戏进行中还是结果画面",
+      "how_to_read": "先看 HUD、提示文本、玩家标记和结果面板，再选择动作",
+      "when_relevant": "每次决策都相关"
+    },
+    "turn_phase": {
+      "meaning": "当前玩家是否在掷骰子、选择路线/道具、移动或等待事件",
+      "how_to_read": "观察当前玩家标记、可选项、高亮框和 A/B 提示",
+      "when_relevant": "棋盘回合和事件场景"
+    },
+    "board_choices": {
+      "meaning": "棋盘路线、商店、道具或事件选项",
+      "how_to_read": "只在可见高亮和按钮提示明确时移动光标或确认",
+      "when_relevant": "出现两个或更多可选项时"
+    },
+    "minigame_state": {
+      "meaning": "小游戏说明、倒计时、进行中、结算或淘汰状态",
+      "how_to_read": "区分说明文字与实际操作提示，不要把倒计时当成输入指令",
+      "when_relevant": "进入小游戏后"
+    },
+    "input_prompt": {
+      "meaning": "画面明确要求的按钮、十字键或摇杆方向",
+      "how_to_read": "优先读取屏幕图标和示范动作；缺少提示时选择 WAIT",
+      "when_relevant": "小游戏和菜单"
+    },
+    "motion_requirement": {
+      "meaning": "是否要求摇动、倾斜、旋转、陀螺仪、IR 或其他运动输入",
+      "how_to_read": "看到 motion/tilt/shake/gyro/rotate 等提示就标记为不支持",
+      "when_relevant": "小游戏说明和进行中"
+    },
+    "timer": {
+      "meaning": "小游戏倒计时或限时提示",
+      "how_to_read": "只用于判断是否需要短输入；不要因为倒计时盲目连续发送动作",
+      "when_relevant": "限时小游戏"
+    },
+    "party_result": {
+      "meaning": "回合、小游戏或整局派对的结果面板",
+      "how_to_read": "看到排名、星星/金币统计或继续按钮时停止连续操作并等待",
+      "when_relevant": "小游戏结算和派对结束"
+    }
+  },
+  "capture": {
+    "device": "Hagibis",
+    "size": "640x480",
+    "framerate": 10
+  },
+  "runtime": {
+    "decision_interval_ms": 1200,
+    "action_duration_ms": 350,
+    "min_action_confidence": 0.78
+  },
+  "candidates": [
+    {
+      "id": "wait",
+      "buttons": [
+        "WAIT"
+      ],
+      "duration_ms": 400,
+      "intent": "保持安全中立",
+      "description": "释放所有输入并观察棋盘、菜单或小游戏提示。"
+    },
+    {
+      "id": "confirm",
+      "buttons": [
+        "A"
+      ],
+      "duration_ms": 180,
+      "intent": "确认或执行主动作",
+      "description": "确认高亮选项、掷骰子、继续或执行画面明确的主动作。"
+    },
+    {
+      "id": "back",
+      "buttons": [
+        "B"
+      ],
+      "duration_ms": 180,
+      "intent": "取消或返回",
+      "description": "返回上一层或取消当前选择。"
+    },
+    {
+      "id": "menu_up",
+      "buttons": [
+        "UP"
+      ],
+      "duration_ms": 180,
+      "intent": "向上移动菜单光标",
+      "description": "将明确可见的菜单或棋盘光标向上移动一格。"
+    },
+    {
+      "id": "menu_down",
+      "buttons": [
+        "DOWN"
+      ],
+      "duration_ms": 180,
+      "intent": "向下移动菜单光标",
+      "description": "将明确可见的菜单或棋盘光标向下移动一格。"
+    },
+    {
+      "id": "menu_left",
+      "buttons": [
+        "LEFT"
+      ],
+      "duration_ms": 180,
+      "intent": "向左移动菜单光标",
+      "description": "将明确可见的菜单或棋盘光标向左移动一格。"
+    },
+    {
+      "id": "menu_right",
+      "buttons": [
+        "RIGHT"
+      ],
+      "duration_ms": 180,
+      "intent": "向右移动菜单光标",
+      "description": "将明确可见的菜单或棋盘光标向右移动一格。"
+    },
+    {
+      "id": "stick_left",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": -0.7,
+        "y": 0
+      },
+      "duration_ms": 350,
+      "intent": "小游戏向左移动或瞄准",
+      "description": "在画面明确要求左摇杆向左时输入短暂左移。"
+    },
+    {
+      "id": "stick_right",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 0.7,
+        "y": 0
+      },
+      "duration_ms": 350,
+      "intent": "小游戏向右移动或瞄准",
+      "description": "在画面明确要求左摇杆向右时输入短暂右移。"
+    },
+    {
+      "id": "stick_up",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 0,
+        "y": 0.7
+      },
+      "duration_ms": 350,
+      "intent": "小游戏向上移动或瞄准",
+      "description": "在画面明确要求左摇杆向上时输入短暂上移。"
+    },
+    {
+      "id": "stick_down",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 0,
+        "y": -0.7
+      },
+      "duration_ms": 350,
+      "intent": "小游戏向下移动或瞄准",
+      "description": "在画面明确要求左摇杆向下时输入短暂下移。"
+    },
+    {
+      "id": "pause",
+      "buttons": [
+        "PLUS"
+      ],
+      "duration_ms": 180,
+      "intent": "暂停并等待人工接管",
+      "description": "仅在用户要求暂停或画面明确显示暂停提示时使用。"
+    }
+  ]
+}

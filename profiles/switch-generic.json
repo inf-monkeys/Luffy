@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "id": "switch-generic",
+  "description": "Safe baseline for an unknown Nintendo Switch game. Use a game-specific profile for autonomous play.",
+  "game": "Unspecified Nintendo Switch game",
+  "introduction": "An unknown Nintendo Switch game. The system must observe the screen and avoid assuming game-specific rules.",
+  "objective": "Observe the current screen and choose one safe, short action. If the game state or control meaning is unclear, wait.",
+  "state_notes": "This is a generic Switch controller. A is usually confirm, B is usually back, and WAIT keeps all controls neutral. Do not assume game-specific rules.",
+  "controller": {
+    "platform": "Nintendo Switch",
+    "layout": "Switch Pro Controller",
+    "button_encoding": "buttons is a simultaneous button list; left_stick and right_stick axes are normalized from -1 to 1; y=1 means up",
+    "supports_simultaneous": true,
+    "supports_sticks": true,
+    "supports_motion": false,
+    "unsupported_sensors": [
+      "gyroscope",
+      "accelerometer",
+      "rumble"
+    ]
+  },
+  "gameplay": {
+    "mode": "unknown_game",
+    "completion_signal": "user_defined",
+    "active_states": [
+      "unknown_active_gameplay"
+    ],
+    "non_active_states": [
+      "home_menu",
+      "game_menu",
+      "loading",
+      "results"
+    ]
+  },
+  "controls": {
+    "A": {
+      "type": "button",
+      "meaning": "主动作或确认",
+      "how_to_press": "通常短按；只有画面要求持续动作时才按住",
+      "when_to_use": "画面明确提示确认、交互或主动作时"
+    },
+    "B": {
+      "type": "button",
+      "meaning": "取消、返回或次要动作",
+      "how_to_press": "通常短按；需要制动或持续动作时才按住",
+      "when_to_use": "画面明确提示返回、取消或次要动作时"
+    },
+    "X": {
+      "type": "button",
+      "meaning": "上下文或次级菜单动作",
+      "how_to_press": "短按并观察结果",
+      "when_to_use": "画面明确提示时"
+    },
+    "Y": {
+      "type": "button",
+      "meaning": "上下文动作或辅助功能",
+      "how_to_press": "短按并观察结果",
+      "when_to_use": "画面明确提示时"
+    },
+    "L": {
+      "type": "button",
+      "meaning": "左肩键",
+      "how_to_press": "短按或按住，取决于游戏提示",
+      "when_to_use": "画面明确提示时"
+    },
+    "R": {
+      "type": "button",
+      "meaning": "右肩键",
+      "how_to_press": "短按或按住，取决于游戏提示",
+      "when_to_use": "画面明确提示时"
+    },
+    "ZL": {
+      "type": "button",
+      "meaning": "左扳机",
+      "how_to_press": "短按或按住，取决于游戏提示",
+      "when_to_use": "画面明确提示时"
+    },
+    "ZR": {
+      "type": "button",
+      "meaning": "右扳机",
+      "how_to_press": "短按或按住，取决于游戏提示",
+      "when_to_use": "画面明确提示时"
+    },
+    "UP": {
+      "type": "button",
+      "meaning": "十字键上",
+      "how_to_press": "短按；可与其他按钮同时输入",
+      "when_to_use": "菜单或游戏明确提示时"
+    },
+    "DOWN": {
+      "type": "button",
+      "meaning": "十字键下",
+      "how_to_press": "短按；可与其他按钮同时输入",
+      "when_to_use": "菜单或游戏明确提示时"
+    },
+    "LEFT": {
+      "type": "button",
+      "meaning": "十字键左",
+      "how_to_press": "短按；可与其他按钮同时输入",
+      "when_to_use": "菜单或游戏明确提示时"
+    },
+    "RIGHT": {
+      "type": "button",
+      "meaning": "十字键右",
+      "how_to_press": "短按；可与其他按钮同时输入",
+      "when_to_use": "菜单或游戏明确提示时"
+    },
+    "L3": {
+      "type": "button",
+      "meaning": "按下左摇杆",
+      "how_to_press": "短按左摇杆",
+      "when_to_use": "游戏明确提示时"
+    },
+    "R3": {
+      "type": "button",
+      "meaning": "按下右摇杆",
+      "how_to_press": "短按右摇杆",
+      "when_to_use": "游戏明确提示时"
+    },
+    "PLUS": {
+      "type": "system",
+      "meaning": "暂停或菜单",
+      "how_to_press": "短按",
+      "when_to_use": "用户或游戏明确要求时"
+    },
+    "MINUS": {
+      "type": "system",
+      "meaning": "地图或次级菜单",
+      "how_to_press": "短按",
+      "when_to_use": "画面明确提示时"
+    },
+    "HOME": {
+      "type": "system",
+      "meaning": "返回 Switch 系统主页",
+      "how_to_press": "短按；主机级操作",
+      "when_to_use": "仅在明确要离开游戏时"
+    },
+    "CAPTURE": {
+      "type": "system",
+      "meaning": "保存截图或视频",
+      "how_to_press": "短按",
+      "when_to_use": "仅在用户要求记录画面时"
+    },
+    "LEFT_STICK": {
+      "type": "stick",
+      "meaning": "左摇杆二维输入",
+      "how_to_press": "x/y 均使用 -1 到 1；未确认映射时保持 0",
+      "when_to_use": "观察到游戏需要移动、转向或选择时"
+    },
+    "RIGHT_STICK": {
+      "type": "stick",
+      "meaning": "右摇杆二维输入",
+      "how_to_press": "x/y 均使用 -1 到 1；未确认映射时保持 0",
+      "when_to_use": "观察到游戏需要视角或相机动作时"
+    },
+    "WAIT": {
+      "type": "neutral",
+      "meaning": "释放所有输入并让摇杆回中",
+      "how_to_press": "buttons=[\"WAIT\"]，两个摇杆不发送",
+      "when_to_use": "无法确认安全动作、菜单、加载或结果画面时"
+    }
+  },
+  "observations": {
+    "screen_state": {
+      "meaning": "当前画面所属的游戏状态",
+      "how_to_read": "先区分菜单、加载、实际游戏和结果画面，再决定输入",
+      "when_relevant": "每次选择动作时"
+    }
+  },
+  "capture": {
+    "size": "640x480",
+    "framerate": 10
+  },
+  "runtime": {
+    "decision_interval_ms": 1200,
+    "action_duration_ms": 300,
+    "min_action_confidence": 0.75
+  },
+  "candidates": [
+    {
+      "id": "wait",
+      "buttons": [
+        "WAIT"
+      ],
+      "duration_ms": 300,
+      "intent": "保持安全中立",
+      "description": "Keep the controller neutral and observe."
+    },
+    {
+      "id": "confirm",
+      "buttons": [
+        "A"
+      ],
+      "duration_ms": 120,
+      "intent": "确认或交互",
+      "description": "Press the primary confirm or interact button briefly."
+    },
+    {
+      "id": "back",
+      "buttons": [
+        "B"
+      ],
+      "duration_ms": 120,
+      "intent": "取消或返回",
+      "description": "Press the cancel or back button briefly."
+    }
+  ]
+}

@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "id": "smpj-which-door-has-more",
+  "description": "《哪个多？》独立小游戏配置：每等级 60 秒，观察当前房间内哪种物品数量更多，再用左摇杆走入对应图标的门。",
+  "game": "超级马里奥派对 空前盛会 / 哪个多？",
+  "introduction": "竞技金币小游戏。每一等级会在房间两侧显示不同物品图标，场景中出现多种物品。玩家需要数当前场景中的物品数量，走进数量更多的物品对应的门。",
+  "objective": "活动关卡先数数量最多物品确定目标门；以 Luigi 脚下为原点，每帧在 UP、LEFT、RIGHT 中选一条短路径，避障进入门洞；活动关卡禁止 WAIT。",
+  "state_notes": "活动关卡禁止 WAIT。先数清物品并确定目标门；以 Luigi 脚下为原点，每帧比较门洞方向和近处地面，在 UP、LEFT、RIGHT 中选短路径；某方向受阻就改选另一方向，靠近门继续短推进入门。",
+  "controller": {
+    "platform": "Nintendo Switch",
+    "layout": "Switch Pro Controller",
+    "button_encoding": "buttons is a simultaneous button list; left_stick and right_stick axes are normalized from -1 to 1; y=1 means up",
+    "supports_simultaneous": true,
+    "supports_sticks": true,
+    "supports_motion": false,
+    "unsupported_sensors": [
+      "gyroscope",
+      "accelerometer",
+      "rumble"
+    ]
+  },
+  "gameplay": {
+    "mode": "single_minigame",
+    "completion_signal": "three_level_coin_result_screen",
+    "active_states": [
+      "instruction",
+      "round_scene",
+      "counting",
+      "moving_to_door",
+      "door_result",
+      "level_transition",
+      "final_result"
+    ],
+    "non_active_states": [
+      "loading",
+      "motion_required",
+      "unsupported_minigame",
+      "paused"
+    ]
+  },
+  "controls": {
+    "A": {
+      "type": "button",
+      "meaning": "菜单确认或开始小游戏；进门时通常不需要 A",
+      "how_to_press": "只在说明页或菜单明确提示 A 时短按",
+      "when_to_use": "开始/确认菜单操作时；活动回合默认不按"
+    },
+    "B": {
+      "type": "button",
+      "meaning": "取消、返回或退出当前选择",
+      "how_to_press": "通常短按；不确定时不要连续按",
+      "when_to_use": "画面明确显示返回/取消，或需要退出当前菜单时"
+    },
+    "X": {
+      "type": "button",
+      "meaning": "上下文动作或道具/辅助界面动作",
+      "how_to_press": "仅在画面明确标出 X 时短按",
+      "when_to_use": "可用道具、辅助界面或小游戏提示明确要求 X 时"
+    },
+    "Y": {
+      "type": "button",
+      "meaning": "次级上下文动作或道具/辅助界面动作",
+      "how_to_press": "仅在画面明确标出 Y 时短按",
+      "when_to_use": "小游戏或菜单明确要求 Y 时"
+    },
+    "L": {
+      "type": "button",
+      "meaning": "左肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 L 时"
+    },
+    "R": {
+      "type": "button",
+      "meaning": "右肩键；部分小游戏的上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 R 时"
+    },
+    "ZL": {
+      "type": "button",
+      "meaning": "左扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZL 时"
+    },
+    "ZR": {
+      "type": "button",
+      "meaning": "右扳机；部分小游戏的瞄准、抓取或上下文动作",
+      "how_to_press": "仅按画面提示短按或保持",
+      "when_to_use": "画面明确显示 ZR 时"
+    },
+    "UP": {
+      "type": "button",
+      "meaning": "十字键上，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向上移动时"
+    },
+    "DOWN": {
+      "type": "button",
+      "meaning": "十字键下，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向下移动时"
+    },
+    "LEFT": {
+      "type": "button",
+      "meaning": "十字键左，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向左移动时"
+    },
+    "RIGHT": {
+      "type": "button",
+      "meaning": "十字键右，用于菜单、列表或棋盘光标",
+      "how_to_press": "短按一次并观察光标变化",
+      "when_to_use": "画面光标需要向右移动时"
+    },
+    "L3": {
+      "type": "button",
+      "meaning": "按下左摇杆",
+      "how_to_press": "仅在画面明确提示 L3 时短按",
+      "when_to_use": "画面明确显示 L3 时"
+    },
+    "R3": {
+      "type": "button",
+      "meaning": "按下右摇杆",
+      "how_to_press": "仅在画面明确提示 R3 时短按",
+      "when_to_use": "画面明确显示 R3 时"
+    },
+    "PLUS": {
+      "type": "system",
+      "meaning": "暂停或打开当前菜单",
+      "how_to_press": "仅在用户要求暂停或画面明确提示时短按",
+      "when_to_use": "需要暂停或查看菜单时；自动运行中默认不使用"
+    },
+    "MINUS": {
+      "type": "system",
+      "meaning": "打开地图、信息或次级菜单",
+      "how_to_press": "仅在画面明确提示时短按",
+      "when_to_use": "需要地图/信息或画面明确提示时"
+    },
+    "HOME": {
+      "type": "system",
+      "meaning": "返回 Switch 系统主页",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "离开游戏时；自动运行中禁止"
+    },
+    "CAPTURE": {
+      "type": "system",
+      "meaning": "保存 Switch 截图或视频",
+      "how_to_press": "仅由用户明确要求时短按",
+      "when_to_use": "需要记录画面时"
+    },
+    "LEFT_STICK": {
+      "type": "stick",
+      "meaning": "在房间内移动 Luigi，走向目标物品图标的门",
+      "how_to_press": "x/y 使用 -1 到 1，y=1 表示画面上方；每次短推约 320–360 ms 后重新观察 Luigi 脚下路线、障碍和门洞中心。",
+      "when_to_use": "以 Luigi 的脚下和身体中心为原点，只从前进、左移、右移三个方向中选择能接近目标门且短路径畅通的动作；遇阻改向，不持续顶墙。"
+    },
+    "RIGHT_STICK": {
+      "type": "stick",
+      "meaning": "视角或小游戏中的第二方向输入",
+      "how_to_press": "x/y 使用 -1 到 1；没有明确提示时保持回中",
+      "when_to_use": "画面明确要求右摇杆时；普通棋盘回合保持回中"
+    },
+    "WAIT": {
+      "type": "neutral",
+      "meaning": "释放摇杆并重新观察物品数量、目标门和 Luigi 位置",
+      "how_to_press": "buttons=[\"WAIT\"]，不发送摇杆偏移",
+      "when_to_use": "计数不清晰、门图标未识别、需要校正路径或剩余时间过低时"
+    }
+  },
+  "observations": {
+    "screen_state": {
+      "meaning": "当前是标题/菜单、棋盘回合、事件、小游戏说明、小游戏进行中还是结果画面",
+      "how_to_read": "先看 HUD、提示文本、玩家标记和结果面板，再选择动作",
+      "when_relevant": "每次决策都相关"
+    },
+    "turn_phase": {
+      "meaning": "当前玩家是否在掷骰子、选择路线/道具、移动或等待事件",
+      "how_to_read": "观察当前玩家标记、可选项、高亮框和 A/B 提示",
+      "when_relevant": "棋盘回合和事件场景"
+    },
+    "board_choices": {
+      "meaning": "棋盘路线、商店、道具或事件选项",
+      "how_to_read": "只在可见高亮和按钮提示明确时移动光标或确认",
+      "when_relevant": "出现两个或更多可选项时"
+    },
+    "minigame_state": {
+      "meaning": "小游戏说明、倒计时、进行中、结算或淘汰状态",
+      "how_to_read": "区分说明文字与实际操作提示，不要把倒计时当成输入指令",
+      "when_relevant": "进入小游戏后"
+    },
+    "input_prompt": {
+      "meaning": "画面明确要求的按钮、十字键或摇杆方向",
+      "how_to_read": "活动关卡禁止 WAIT；先数清数量最多物品并确定目标门，以 Luigi 为中心看门洞相对方向和短路径，只能从 UP、LEFT、RIGHT 中选择。",
+      "when_relevant": "小游戏和菜单"
+    },
+    "motion_requirement": {
+      "meaning": "是否要求摇动、倾斜、旋转、陀螺仪、IR 或其他运动输入",
+      "how_to_read": "本小游戏操作页只显示“移动”，没有体感要求",
+      "when_relevant": "进入小游戏后"
+    },
+    "timer": {
+      "meaning": "本等级剩余时间，每等级约 60 秒",
+      "how_to_read": "倒计时表示活动关卡，不能 WAIT；每次以 Luigi 脚下为原点重看门洞方向和短路径，只在前进、左移、右移中选畅通方向，遇阻改向。",
+      "when_relevant": "每次决策都相关"
+    },
+    "party_result": {
+      "meaning": "回合、小游戏或整局派对的结果面板",
+      "how_to_read": "看到排名、星星/金币统计或继续按钮时停止连续操作并等待",
+      "when_relevant": "小游戏结算和派对结束"
+    },
+    "door_options": {
+      "meaning": "每扇门上方代表的物品类别；普通问题通常两扇，奖励问题可能三扇",
+      "how_to_read": "先数门的数量，再读每扇门图标并对应场景物品；数量最多的类别决定目标门。不要把门上图标或两门间空隙当作场景物品或额外门。",
+      "when_relevant": "每个等级开始时"
+    },
+    "scene_counts": {
+      "meaning": "当前房间中每种物品的数量",
+      "how_to_read": "逐类数清当前画面可见物品，比较数量后再读取对应门图标；物品会移动时结合当前帧和明显多数，不因单个物品一帧进出就改目标。",
+      "when_relevant": "选择目标门前"
+    },
+    "player_position": {
+      "meaning": "Luigi 相对目标门的方向和距离",
+      "how_to_read": "以 Luigi 的脚下和身体中心为坐标原点，不看屏幕中心；比较门洞相对左、右、正前方的位置和短路径，分别选择左、右或前进，接近门口后让 Luigi 中心进入门洞。",
+      "when_relevant": "移动到门的过程中"
+    },
+    "round_index": {
+      "meaning": "当前第几个等级；结果页显示等级 1、2、3",
+      "how_to_read": "等级切换后重新计数，不复用上一等级的物品数量",
+      "when_relevant": "等级开始和结算时"
+    }
+  },
+  "capture": {
+    "device": "Hagibis",
+    "size": "640x480",
+    "framerate": 10
+  },
+  "runtime": {
+    "decision_interval_ms": 700,
+    "action_duration_ms": 240,
+    "min_action_confidence": 0.01,
+    "movement_switch_confirmations": 2
+  },
+  "candidates": [
+    {
+      "id": "wait",
+      "buttons": [
+        "WAIT"
+      ],
+      "duration_ms": 240,
+      "intent": "仅非活动或完全不可识别时中立",
+      "description": "只有结算页、菜单、加载页或完全无法识别当前场景时释放输入；活动关卡继续从三个移动方向中选一个。"
+    },
+    {
+      "id": "UP",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 0,
+        "y": 0.9
+      },
+      "duration_ms": 360,
+      "intent": "目标正前方且前路畅通",
+      "description": "目标门与 Luigi 横向接近对齐且正前方短路径畅通时向前短推；正前方有墙、柱或角色就改选左或右。"
+    },
+    {
+      "id": "LEFT",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": -0.75,
+        "y": 0.9
+      },
+      "duration_ms": 360,
+      "intent": "目标在左侧且左前路畅通",
+      "description": "目标门在 Luigi 左侧且左前短路径畅通时向左前方短推；左前受阻或贴墙时改选前进或右移，不要持续左推。"
+    },
+    {
+      "id": "RIGHT",
+      "buttons": [
+        "WAIT"
+      ],
+      "left_stick": {
+        "x": 0.75,
+        "y": 0.9
+      },
+      "duration_ms": 360,
+      "intent": "目标在右侧且右前路畅通",
+      "description": "目标门在 Luigi 右侧且右前短路径畅通时向右前方短推；右前受阻或贴墙时改选前进或左移，不要持续右推。"
+    }
+  ],
+  "minigame": {
+    "name": "哪个多？",
+    "english_name": "Which Door Has More?",
+    "players": "竞技金币小游戏",
+    "objective": "选择对应角色数量更多的一扇门，获取金币；奖励问题的选项会增加至 3 个，但能获得更多金币。",
+    "operation": "移动（左摇杆）",
+    "motion_required": false,
+    "round_time_seconds": 60,
+    "levels_observed": 3,
+    "test_result": "一次试玩因远程移动延迟未及时进门，结果为 0 金币"
+  }
+}
