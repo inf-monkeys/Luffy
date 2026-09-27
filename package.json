@@ -1,0 +1,12 @@
+{
+  "name": "luffy-jev-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20.11" },
+  "scripts": {
+    "dev": "node --watch --env-file=.env src/server.mjs",
+    "start": "node --env-file=.env src/server.mjs",
+    "check": "node --check src/server.mjs"
+  }
+}
