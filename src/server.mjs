@@ -1,14 +1,14 @@
 import { createServer } from "node:http";
 import { createHash, randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
 
 const port = Number(process.env.PORT || 8787);
 const host = process.env.HOST || "127.0.0.1";
 const baseUrl = (process.env.TYPESAFE_BASE_URL || "https://api.typesafe.ai").replace(/\/$/, "");
 const apiKey = (process.env.TYPESAFE_API_KEY || "").trim();
-const visionBaseUrl = (process.env.VISION_API_BASE_URL || "").replace(/\/$/, "");
-const visionApiKey = (process.env.VISION_API_KEY || "").trim();
-const visionModel = process.env.VISION_MODEL || "";
 const maxBodyBytes = 6 * 1024 * 1024;
+const dashboard = await readFile(new URL("../public/index.html", import.meta.url));
 
 function json(res, status, body) {
   const payload = JSON.stringify(body);
@@ -25,7 +25,7 @@ async function readJson(req) {
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > maxBodyBytes) throw new Error("request body exceeds 32 KiB");
+    if (size > maxBodyBytes) throw new Error("request body exceeds 6 MiB");
     chunks.push(chunk);
   }
   if (size === 0) return {};
@@ -113,25 +113,23 @@ function validateCandidates(candidates) {
   }
 }
 
-async function analyzeFrame({ imageData, previousState }) {
-  if (!visionBaseUrl || !visionApiKey || !visionModel) {
-    throw Object.assign(new Error("Configure VISION_API_BASE_URL, VISION_API_KEY, and VISION_MODEL to enable image perception"), { statusCode: 503 });
-  }
-  const prompt = `Analyze this single EA SPORTS FC 26 Nintendo Switch gameplay frame. Return only JSON with: {"phase":"menu|kickoff|open_play|set_piece|replay|pause|unknown","scoreboard":{"home":number|null,"away":number|null,"clock":"string|null"},"ball":{"x":number|null,"y":number|null,"confidence":number},"controlled_player":{"x":number|null,"y":number|null,"confidence":number},"visible_players":[{"team":"ours|opponents|unknown","x":number,"y":number,"confidence":number}],"possession":"ours|opponents|loose|unknown","attack_direction":"left|right|unknown","on_screen_hints":["..."],"confidence":number,"uncertainty":["..."]}. Coordinates must be normalized 0..1 within the pitch/play area, not the whole TV frame. Do not guess entities hidden or too small to identify; use null/unknown and lower confidence. Do not recommend a button. Previous observation for temporal continuity: ${JSON.stringify(previousState ?? null)}`;
-  const response = await fetch(`${visionBaseUrl}/chat/completions`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${visionApiKey}`, "content-type": "application/json" },
-    body: JSON.stringify({ model: visionModel, temperature: 0, response_format: { type: "json_object" }, messages: [
-      { role: "system", content: "You are a conservative visual state extractor for a video game. Return only valid JSON matching the requested schema. Never infer hidden game state." },
-      { role: "user", content: [ { type: "text", text: prompt }, { type: "image_url", image_url: { url: imageData } } ] },
-    ] }),
+async function analyzeFrame({ imageData, previousState, previousImageData }) {
+  const python = process.env.PYTHON_BIN || new URL("../.venv/bin/python", import.meta.url).pathname;
+  const script = new URL("./opencv_perception.py", import.meta.url).pathname;
+  return new Promise((resolve, reject) => {
+    const child = spawn(python, [script], { stdio: ["pipe", "pipe", "pipe"] });
+    let stdout = "", stderr = "";
+    child.stdout.setEncoding("utf8"); child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    child.on("error", (error) => reject(Object.assign(new Error(`Cannot start local OpenCV perception: ${error.message}`), { statusCode: 503 })));
+    child.on("close", (code) => {
+      if (code !== 0) return reject(Object.assign(new Error(`OpenCV perception failed: ${stderr.trim() || `exit ${code}`}`), { statusCode: 502 }));
+      try { resolve(JSON.parse(stdout)); }
+      catch { reject(Object.assign(new Error("OpenCV perception returned invalid JSON"), { statusCode: 502 })); }
+    });
+    child.stdin.end(JSON.stringify({ imageData, previousState: previousState ?? null, previousImageData: previousImageData ?? null }));
   });
-  const raw = await response.text();
-  let payload;
-  try { payload = JSON.parse(raw); } catch { payload = { error: raw }; }
-  if (!response.ok) throw Object.assign(new Error(`vision provider HTTP ${response.status}: ${payload.error?.message || payload.message || "request failed"}`), { statusCode: 502 });
-  try { return JSON.parse(payload.choices[0].message.content); }
-  catch { throw Object.assign(new Error("vision provider returned invalid JSON state"), { statusCode: 502 }); }
 }
 
 async function recommendFc26({ state, candidates }) {
@@ -151,8 +149,12 @@ async function recommendFc26({ state, candidates }) {
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+  if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+    return res.end(dashboard);
+  }
   if (req.method === "GET" && url.pathname === "/healthz") {
-    return json(res, 200, { ok: true, service: "luffy-jev-gateway", jevConfigured: Boolean(apiKey), imagePerceptionConfigured: Boolean(visionBaseUrl && visionApiKey && visionModel), obsScreenshotConfigured: Boolean(process.env.OBS_SOURCE_NAME) });
+    return json(res, 200, { ok: true, service: "luffy-jev-gateway", jevConfigured: Boolean(apiKey), imagePerceptionConfigured: true, perception: "local-opencv-conservative", obsScreenshotConfigured: Boolean(process.env.OBS_SOURCE_NAME), obsAuthenticationConfigured: Boolean(process.env.OBS_WS_PASSWORD) });
   }
   if (req.method === "GET" && url.pathname === "/api/obs/screenshot") {
     try { return json(res, 200, await captureObsScreenshot()); }
@@ -163,7 +165,7 @@ const server = createServer(async (req, res) => {
       const body = await readJson(req);
       if (typeof body.imageData !== "string" || !/^data:image\/(png|jpeg|webp);base64,/.test(body.imageData)) throw Object.assign(new Error("imageData must be a PNG, JPEG, or WebP data URL"), { statusCode: 400 });
       validateCandidates(body.candidates);
-      const state = await analyzeFrame({ imageData: body.imageData, previousState: body.previousState });
+      const state = await analyzeFrame({ imageData: body.imageData, previousState: body.previousState, previousImageData: body.previousImageData });
       if (!Number.isFinite(state.confidence) || state.confidence < Number(process.env.MIN_VISION_CONFIDENCE || 0.55)) {
         return json(res, 200, { status: "abstain", reason: "visual_state_confidence_too_low", state, suggestedAction: null });
       }
@@ -178,12 +180,12 @@ const server = createServer(async (req, res) => {
       const body = await readJson(req);
       validateCandidates(body.candidates);
       const frame = await captureObsScreenshot();
-      const state = await analyzeFrame({ imageData: frame.imageData, previousState: body.previousState });
+      const state = await analyzeFrame({ imageData: frame.imageData, previousState: body.previousState, previousImageData: body.previousImageData });
       if (!Number.isFinite(state.confidence) || state.confidence < Number(process.env.MIN_VISION_CONFIDENCE || 0.55)) {
-        return json(res, 200, { status: "abstain", reason: "visual_state_confidence_too_low", sourceName: frame.sourceName, capturedAt: frame.capturedAt, state, suggestedAction: null, execution: "manual_only" });
+        return json(res, 200, { status: "abstain", reason: "visual_state_confidence_too_low", sourceName: frame.sourceName, capturedAt: frame.capturedAt, imageData: frame.imageData, state, suggestedAction: null, execution: "manual_only" });
       }
       const recommendation = await recommendFc26({ state, candidates: body.candidates });
-      return json(res, 200, { status: "recommendation", sourceName: frame.sourceName, capturedAt: frame.capturedAt, state, suggestedAction: recommendation.candidate, confidence: recommendation.confidence, probabilities: recommendation.probabilities, model: recommendation.model, execution: "manual_only" });
+      return json(res, 200, { status: "recommendation", sourceName: frame.sourceName, capturedAt: frame.capturedAt, imageData: frame.imageData, state, suggestedAction: recommendation.candidate, confidence: recommendation.confidence, probabilities: recommendation.probabilities, model: recommendation.model, execution: "manual_only" });
     } catch (error) {
       return json(res, error.statusCode || (error.name === "TypeError" ? 502 : 400), { error: error.message || "request_failed" });
     }

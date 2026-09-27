@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node --watch --env-file=.env src/server.mjs",
     "start": "node --env-file=.env src/server.mjs",
-    "check": "node --check src/server.mjs"
+    "check": "node --check src/server.mjs && .venv/bin/python -m py_compile src/opencv_perception.py",
+    "setup:vision": "python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt"
   }
 }
