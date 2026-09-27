@@ -183,6 +183,7 @@ const server = createServer(async (req, res) => {
       const frame = await captureObsScreenshot();
       const state = await analyzeFrame({ imageData: frame.imageData, previousState: body.previousState, previousImageData: body.previousImageData });
       if (!Number.isFinite(state.confidence) || state.confidence < Number(process.env.MIN_VISION_CONFIDENCE || 0.55)) {
+        if (state.signal_detected === false) await new Promise((resolve) => setTimeout(resolve, 1000));
         return json(res, 200, { status: "abstain", reason: "visual_state_confidence_too_low", sourceName: frame.sourceName, capturedAt: frame.capturedAt, imageData: frame.imageData, state, suggestedAction: null, execution: "manual_only" });
       }
       const jevInterval = Math.max(1000, Number(process.env.JEV_MIN_INTERVAL_MS || 2500));
@@ -193,6 +194,7 @@ const server = createServer(async (req, res) => {
       const recommendation = await recommendGameAction({ game: body.game || "Unspecified game", objective: body.objective || "Choose a safe next action", stateNotes: body.stateNotes, state, candidates: body.candidates });
       return json(res, 200, { status: "recommendation", sourceName: frame.sourceName, capturedAt: frame.capturedAt, imageData: frame.imageData, state, suggestedAction: recommendation.candidate, confidence: recommendation.confidence, probabilities: recommendation.probabilities, model: recommendation.model, execution: "manual_only" });
     } catch (error) {
+      if ((error.message || "").includes("OBS WebSocket")) await new Promise((resolve) => setTimeout(resolve, 1000));
       return json(res, error.statusCode || (error.name === "TypeError" ? 502 : 400), { error: error.message || "request_failed" });
     }
   }
