@@ -1,18 +1,9 @@
 import { createServer } from "node:http";
 
 const port = Number(process.env.PORT || 8787);
-const baseUrl = (process.env.JEV_BASE_URL || "https://www.jevai.org").replace(/\/$/, "");
-const apiKey = (process.env.JEV_API_KEY || "").trim();
+const baseUrl = (process.env.TYPESAFE_BASE_URL || "https://api.typesafe.ai").replace(/\/$/, "");
+const apiKey = (process.env.TYPESAFE_API_KEY || "").trim();
 const maxBodyBytes = 32 * 1024;
-
-const workflows = new Set([
-  "decisions",
-  "decisions/tool-guard",
-  "decisions/model-route",
-  "decisions/route",
-  "decisions/research",
-  "decisions/completion",
-]);
 
 function json(res, status, body) {
   const payload = JSON.stringify(body);
@@ -41,8 +32,8 @@ async function readJson(req) {
 }
 
 async function callJev(path, body) {
-  if (!apiKey) throw Object.assign(new Error("JEV_API_KEY is not configured"), { statusCode: 503 });
-  const response = await fetch(`${baseUrl}/api/v1/${path}`, {
+  if (!apiKey) throw Object.assign(new Error("TYPESAFE_API_KEY is not configured"), { statusCode: 503 });
+  const response = await fetch(`${baseUrl}/v1/systemone`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,
@@ -62,16 +53,13 @@ const server = createServer(async (req, res) => {
   if (req.method === "GET" && url.pathname === "/healthz") {
     return json(res, 200, { ok: true, service: "luffy-jev-gateway", jevConfigured: Boolean(apiKey) });
   }
-  if (req.method !== "POST" || !url.pathname.startsWith("/api/jev/")) {
+  if (req.method !== "POST" || url.pathname !== "/api/jev/systemone") {
     return json(res, 404, { error: "not_found" });
   }
 
-  const path = url.pathname.slice("/api/jev/".length);
-  if (!workflows.has(path)) return json(res, 404, { error: "unsupported_workflow", workflows: [...workflows] });
-
   try {
     const body = await readJson(req);
-    const { response, data } = await callJev(path, body);
+    const { response, data } = await callJev("systemone", body);
     return json(res, response.status, data);
   } catch (error) {
     const status = error.statusCode || (error.name === "TypeError" ? 502 : 400);
